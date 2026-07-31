@@ -1,0 +1,16 @@
+{
+  "name": "identityforge-mcp-wrapper",
+  "version": "0.3.6",
+  "private": true,
+  "description": "Public Docker and registry wrapper for the Identity Forge MCP server.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "identityforge mcp"
+  },
+  "dependencies": {
+    "identityforge": "0.3.6"
+  }
+}

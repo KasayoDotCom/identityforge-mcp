@@ -1,0 +1,35 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "name": "io.identityforge/mcp",
+  "description": "Design kits for coding agents: pick a complete design system with tokens, fonts, and DESIGN.md guidance, then apply it in one call. Also includes brand naming and domain research.",
+  "websiteUrl": "https://identityforge.io",
+  "version": "0.3.6",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "identityforge",
+      "version": "0.3.6",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp",
+          "valueHint": "mcp",
+          "description": "Run the MCP server over stdio"
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "IDENTITYFORGE_API_KEY",
+          "description": "Optional for browsing Free kits. Required for Pro kits, saved projects, and write operations. Run `npx --yes identityforge@latest login`; signup asks you to confirm your email and then resumes authorization.",
+          "isRequired": false,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}
