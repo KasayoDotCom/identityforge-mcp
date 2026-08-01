@@ -1,6 +1,6 @@
-# Publishes the public Identity Forge CLI/MCP package to npm through OIDC.
+# Publishes the public CLI/MCP package to npm and its metadata to the MCP Registry.
 # npm's trusted publisher must match this repository and this workflow filename.
-name: Publish CLI to npm
+name: Publish CLI and MCP metadata
 
 on:
   push:
@@ -64,3 +64,37 @@ jobs:
           node -e 'const fs=require("node:fs"),r=fs.readFileSync(process.argv[1],"utf8").trim().split("\n").map(JSON.parse); if(r.find(x=>x.id===1)?.result?.serverInfo?.version!==process.argv[2]||!r.find(x=>x.id===2)?.result?.tools?.length) process.exit(1)' "$RUNNER_TEMP/mcp.jsonl" "$version"
       - if: steps.gate.outputs.publish == 'true'
         run: npm publish "$RUNNER_TEMP/${{ steps.pack.outputs.tarball }}"
+      - name: Check version against MCP Registry
+        id: registry-gate
+        run: |
+          version=$(node -p "require('./package.json').version")
+          registry_http_status=$(curl --ipv4 --silent --show-error \
+            --retry 4 --retry-delay 5 --retry-all-errors \
+            --connect-timeout 10 --max-time 30 \
+            --output "$RUNNER_TEMP/mcp-registry.json" --write-out '%{http_code}' \
+            "https://registry.modelcontextprotocol.io/v0.1/servers/io.identityforge%2Fmcp/versions/$version")
+          case "$registry_http_status" in
+            200) echo "publish=false" >> "$GITHUB_OUTPUT" ;;
+            404) echo "publish=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "MCP Registry returned HTTP $registry_http_status" >&2; exit 1 ;;
+          esac
+      - if: steps.registry-gate.outputs.publish == 'true'
+        name: Install mcp-publisher
+        run: |
+          archive="$RUNNER_TEMP/mcp-publisher_linux_amd64.tar.gz"
+          curl --fail --silent --show-error --location \
+            https://github.com/modelcontextprotocol/registry/releases/download/v1.7.9/mcp-publisher_linux_amd64.tar.gz \
+            > "$archive"
+          echo "ab128162b0616090b47cf245afe0a23f3ef08936fdce19074f5ba0a4469281ac  $archive" | sha256sum -c -
+          tar -xzf "$archive" -C "$RUNNER_TEMP" mcp-publisher
+      - if: steps.registry-gate.outputs.publish == 'true'
+        name: Publish to MCP Registry
+        env:
+          MCP_REGISTRY_PRIVATE_KEY: ${{ secrets.MCP_REGISTRY_PRIVATE_KEY }}
+        run: |
+          test -n "$MCP_REGISTRY_PRIVATE_KEY"
+          "$RUNNER_TEMP/mcp-publisher" login dns \
+            --domain identityforge.io \
+            --private-key "$MCP_REGISTRY_PRIVATE_KEY"
+          "$RUNNER_TEMP/mcp-publisher" validate server.json
+          "$RUNNER_TEMP/mcp-publisher" publish server.json
