@@ -42,15 +42,9 @@ installing anything.
 The three-minute lifecycle film follows a design system from the first choice
 through later updates, an older-site rebuild, and a client handoff.
 
-<p align="center">
-  <a href="https://github.com/KasayoDotCom/identityforge-mcp/releases/download/v0.3.8/identity-forge-lifecycle-explainer.webm">
-    <img src="https://raw.githubusercontent.com/KasayoDotCom/identityforge-mcp/main/assets/identity-forge-lifecycle-explainer.jpg" alt="Identity Forge rebuilding an older product with an agent-ready design system" width="1200">
-  </a>
-</p>
+https://github.com/user-attachments/assets/b5125f58-6918-4355-b849-6863a4345a21
 
-<p align="center">
-  <a href="https://github.com/KasayoDotCom/identityforge-mcp/releases/download/v0.3.8/identity-forge-lifecycle-explainer.webm">Watch the lifecycle explainer with sound</a>
-</p>
+[Download the full-resolution 1080p WebM](https://github.com/KasayoDotCom/identityforge-mcp/releases/download/v0.3.9/identity-forge-lifecycle-explainer.webm).
 
 ## For agents
 
