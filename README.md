@@ -42,15 +42,9 @@ installing anything.
 The three-minute lifecycle film follows a design system from the first choice
 through later updates, an older-site rebuild, and a client handoff.
 
-<p align="center">
-  <a href="https://github.com/KasayoDotCom/identityforge-mcp/releases/download/v0.3.8/identity-forge-lifecycle-explainer.webm">
-    <img src="https://raw.githubusercontent.com/KasayoDotCom/identityforge-mcp/main/assets/identity-forge-lifecycle-explainer.jpg" alt="Identity Forge rebuilding an older product with an agent-ready design system" width="1200">
-  </a>
-</p>
+https://github.com/user-attachments/assets/b5125f58-6918-4355-b849-6863a4345a21
 
-<p align="center">
-  <a href="https://github.com/KasayoDotCom/identityforge-mcp/releases/download/v0.3.8/identity-forge-lifecycle-explainer.webm">Watch the lifecycle explainer with sound</a>
-</p>
+[Download the full-resolution 1080p WebM](https://github.com/KasayoDotCom/identityforge-mcp/releases/download/v0.3.9/identity-forge-lifecycle-explainer.webm).
 
 ## For agents
 
@@ -239,9 +233,15 @@ It writes nothing and never touches the working tree. Losing your key or hitting
 
 These answer questions a kit does not. None of them replace the kit.
 
-- `list_image_directions` / `get_image_direction`: choose and export how the project's imagery should be made.
+- `list_image_directions` / `get_image_direction`: choose and export how the project's imagery should be presented and repeated.
 - `list_interface_styles` / `get_interface_style`: choose and export a neutral render grammar for surfaces and hierarchy, applied through a kit.
 - `list_page_recipes` / `get_page_recipe`: choose and export how a page should argue its case.
+
+When the user supplies a real product, person, or object, keep that reference recognizable. Use
+the chosen image direction to shape project-specific presentation routes around it: setting,
+supporting elements, composition, lighting, surfaces, crop, finish, and variation rules. After the
+person chooses, codify the route for the image model they use. Identity Forge provides the brief;
+it does not render the images in this flow.
 
 ### Author kits and brands (`kits:write`)
 
@@ -514,7 +514,7 @@ The image contains no kit payloads. The key is optional: without one, the server
 - [Kit gallery](https://identityforge.io/kits): browse every kit with live previews, judged use-case lanes, and search.
 - [For agents](https://identityforge.io/for-agents): the full agent integration story.
 - [API manifest](https://identityforge.io/api/v1) and [llms.txt](https://identityforge.io/api/v1/llms.txt).
-- [Official MCP Registry record](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.identityforge%2Fmcp) and [Glama listing](https://glama.ai/mcp/servers/KasayoDotCom/identityforge-mcp).
+- [Official MCP Registry record](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.identityforge%2Fmcp) and [Glama listing with independent build and security analysis](https://glama.ai/mcp/servers/KasayoDotCom/identityforge-mcp/score).
 
 If Identity Forge earns a place in your workflow, a GitHub star helps other builders find it.
 
