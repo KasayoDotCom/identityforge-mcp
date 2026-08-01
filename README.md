@@ -1,13 +1,45 @@
-# identityforge
+<p align="center">
+  <a href="https://identityforge.io">
+    <img src="https://identityforge.io/opengraph-image.png" alt="Identity Forge branding pipeline from names and design kits to agent-ready systems" width="1200">
+  </a>
+</p>
 
-[![npm version](https://img.shields.io/npm/v/identityforge)](https://www.npmjs.com/package/identityforge)
-[![license](https://img.shields.io/npm/l/identityforge)](./LICENSE)
+<h1 align="center">Identity Forge MCP</h1>
 
-Give a coding agent the complete [Identity Forge](https://identityforge.io) workflow through one CLI and a local MCP server. Your agent picks a judged design system that fits what you are building, with fonts, semantic tokens, motifs, and a DESIGN.md, then applies it to the project. Brand naming and domain research ride along on a persistent shortlist board.
+<p align="center">Design systems, brand naming, and domain research for coding agents.</p>
 
-## Quick start
+<p align="center">
+  <a href="#for-people">For people</a> ·
+  <a href="#for-agents">For agents</a> ·
+  <a href="#mcp-tools">MCP tools</a> ·
+  <a href="#cli-commands">CLI reference</a>
+</p>
 
-Install the MCP server into your agent. Use the line for the agent you work in:
+<p align="center">
+  <a href="https://www.npmjs.com/package/identityforge"><img src="https://img.shields.io/npm/v/identityforge" alt="npm version"></a>
+  <a href="https://github.com/KasayoDotCom/identityforge-mcp/actions/workflows/ci.yml"><img src="https://github.com/KasayoDotCom/identityforge-mcp/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/npm/l/identityforge" alt="MIT license"></a>
+</p>
+
+## For people
+
+Identity Forge gives a coding agent a complete visual system before it starts
+building. Choose a design kit yourself, or let the agent rank the catalog
+against your product and the mood you want. Each kit includes typography,
+semantic color tokens, layout, motifs, dos and don'ts, and a `DESIGN.md` the
+agent can build from.
+
+The agent can export the kit as CSS, Tailwind v3 or v4, shadcn registry data,
+DTCG tokens, or JSON, then apply it with conflict protection. Brand naming,
+domain research, and shareable client projects live in the same workflow.
+
+Public Free kits work without an account. [Browse the design kits](https://identityforge.io/kits)
+or [read how the agent flow works](https://identityforge.io/for-agents) before
+installing anything.
+
+## For agents
+
+Install the local MCP server into the client you use:
 
 ```bash
 npx --yes identityforge@latest install --client claude-code   # Claude Code
@@ -16,23 +48,24 @@ npx --yes identityforge@latest install --client vscode        # VS Code / Copilo
 npx --yes identityforge@latest install --client codex         # Codex
 ```
 
-Also supported: `gemini`, `opencode`, `pi`. Every one of them runs the same local stdio
-server, and `install` merges into your existing config rather than replacing it. Config
-paths for all seven are in [Install into an agent](#install-into-an-agent).
+Also supported: `gemini`, `opencode`, `pi`. Every client runs the same local
+stdio server, and `install` merges into your existing config rather than
+replacing it. Config paths for all seven are in
+[Install into an agent](#install-into-an-agent).
 
-Then sign in once:
+Public Free kits work immediately, without a key. Tell your agent:
+
+> Use Identity Forge to pick a theme that fits this product, apply it, and follow the DESIGN.md.
+
+Sign in for persistent projects, saved work, authenticated quota, or Pro access:
 
 ```bash
 npx --yes identityforge@latest login
 ```
 
-No account yet? The browser offers signup and waits for the confirmation email.
-Follow the email link and confirm on the page; the pending CLI authorization then
-resumes automatically.
-
-Then tell your agent:
-
-> Use Identity Forge to pick a theme that fits this product, apply it, and follow the DESIGN.md.
+No account yet? Browser signup sends a confirmation email. Open the email link
+and confirm on the page; the pending CLI authorization then resumes
+automatically.
 
 ## Judged discovery
 
@@ -466,6 +499,9 @@ The image contains no kit payloads. The key is optional: without one, the server
 - [Kit gallery](https://identityforge.io/kits): browse every kit with live previews, judged use-case lanes, and search.
 - [For agents](https://identityforge.io/for-agents): the full agent integration story.
 - [API manifest](https://identityforge.io/api/v1) and [llms.txt](https://identityforge.io/api/v1/llms.txt).
+- [Official MCP Registry record](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.identityforge%2Fmcp) and [Glama listing](https://glama.ai/mcp/servers/KasayoDotCom/identityforge-mcp).
+
+If Identity Forge earns a place in your workflow, a GitHub star helps other builders find it.
 
 ## License
 
