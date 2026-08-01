@@ -1,0 +1,66 @@
+# Publishes the public Identity Forge CLI/MCP package to npm through OIDC.
+# npm's trusted publisher must match this repository and this workflow filename.
+name: Publish CLI to npm
+
+on:
+  push:
+    branches: [main]
+    paths: [package.json]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - name: Check version against npm
+        id: gate
+        run: |
+          local_v=$(node -p "require('./package.json').version")
+          published_v=$(npm view identityforge version 2>/dev/null || echo "0.0.0")
+          echo "local=$local_v published=$published_v"
+          if [ "$local_v" = "$published_v" ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          elif [ "$(printf '%s\n' "$published_v" "$local_v" | sort -V | tail -1)" = "$local_v" ]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Repo version $local_v is BEHIND npm $published_v" >&2
+            exit 1
+          fi
+      - if: steps.gate.outputs.publish == 'true'
+        run: npm install -g npm@latest
+      - if: steps.gate.outputs.publish == 'true'
+        run: npm ci
+      - if: steps.gate.outputs.publish == 'true'
+        run: npm test
+      - if: steps.gate.outputs.publish == 'true'
+        run: npm run typecheck
+      - if: steps.gate.outputs.publish == 'true'
+        run: npm run build
+      - if: steps.gate.outputs.publish == 'true'
+        id: pack
+        run: echo "tarball=$(npm pack --silent --pack-destination "$RUNNER_TEMP")" >> "$GITHUB_OUTPUT"
+      - if: steps.gate.outputs.publish == 'true'
+        name: Smoke-test packed MCP server
+        run: |
+          smoke_dir="$RUNNER_TEMP/identityforge-smoke"
+          tarball="$RUNNER_TEMP/${{ steps.pack.outputs.tarball }}"
+          npm install --prefix "$smoke_dir" "$tarball" --ignore-scripts --no-audit --no-fund
+          version=$(node -p "require('./package.json').version")
+          test "$(node "$smoke_dir/node_modules/identityforge/dist/index.js" --version)" = "$version"
+          node -e 'const p=require(process.argv[1]+"/node_modules/identityforge/package.json"); if(p.version!==process.argv[2]||p.mcpName!=="io.identityforge/mcp"||p.repository?.url!=="git+https://github.com/KasayoDotCom/identityforge-mcp.git") process.exit(1)' "$smoke_dir" "$version"
+          printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"release-smoke","version":"1.0.0"}}}' '{"jsonrpc":"2.0","method":"notifications/initialized"}' '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' | env -u IDENTITYFORGE_API_KEY node "$smoke_dir/node_modules/identityforge/dist/index.js" mcp > "$RUNNER_TEMP/mcp.jsonl"
+          node -e 'const fs=require("node:fs"),r=fs.readFileSync(process.argv[1],"utf8").trim().split("\n").map(JSON.parse); if(r.find(x=>x.id===1)?.result?.serverInfo?.version!==process.argv[2]||!r.find(x=>x.id===2)?.result?.tools?.length) process.exit(1)' "$RUNNER_TEMP/mcp.jsonl" "$version"
+      - if: steps.gate.outputs.publish == 'true'
+        run: npm publish "$RUNNER_TEMP/${{ steps.pack.outputs.tarball }}"

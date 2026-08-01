@@ -1,16 +1,64 @@
 {
-  "name": "identityforge-mcp-wrapper",
-  "version": "0.3.6",
-  "private": true,
-  "description": "Public Docker and registry wrapper for the Identity Forge MCP server.",
-  "license": "MIT",
-  "engines": {
-    "node": ">=18"
-  },
-  "scripts": {
-    "start": "identityforge mcp"
-  },
-  "dependencies": {
-    "identityforge": "0.3.6"
-  }
+	"name": "identityforge",
+	"version": "0.3.7",
+	"mcpName": "io.identityforge/mcp",
+	"description": "Agent-native brand naming, domain research, and design systems through one CLI and MCP server.",
+	"type": "module",
+	"homepage": "https://identityforge.io",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/KasayoDotCom/identityforge-mcp.git"
+	},
+	"bugs": {
+		"url": "https://github.com/KasayoDotCom/identityforge-mcp/issues"
+	},
+	"bin": {
+		"identityforge": "dist/index.js"
+	},
+	"publishConfig": {
+		"access": "public",
+		"provenance": true
+	},
+	"files": ["dist"],
+	"engines": {
+		"node": ">=18"
+	},
+	"scripts": {
+		"build": "tsc -p tsconfig.json",
+		"dev": "tsx src/index.ts",
+		"start": "node dist/index.js",
+		"test": "tsx --test src/*.test.ts",
+		"typecheck": "tsc --noEmit -p tsconfig.json",
+		"prepublishOnly": "npm run build"
+	},
+	"keywords": [
+		"identity-forge",
+		"design-system",
+		"design-tokens",
+		"design-kits",
+		"brand-naming",
+		"branding",
+		"theming",
+		"domain-research",
+		"mcp",
+		"mcp-server",
+		"model-context-protocol",
+		"ai-agent",
+		"claude-code",
+		"cursor",
+		"codex",
+		"shadcn",
+		"tailwind"
+	],
+	"license": "MIT",
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "1.29.0",
+		"commander": "^13.1.0",
+		"zod": "^4.4.3"
+	},
+	"devDependencies": {
+		"@types/node": "^26.0.0",
+		"tsx": "^4.22.4",
+		"typescript": "^6.0.3"
+	}
 }

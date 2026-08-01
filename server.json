@@ -1,35 +1,41 @@
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
-  "name": "io.identityforge/mcp",
-  "description": "Design kits for coding agents: pick a complete design system with tokens, fonts, and DESIGN.md guidance, then apply it in one call. Also includes brand naming and domain research.",
-  "websiteUrl": "https://identityforge.io",
-  "version": "0.3.6",
-  "packages": [
-    {
-      "registryType": "npm",
-      "registryBaseUrl": "https://registry.npmjs.org",
-      "identifier": "identityforge",
-      "version": "0.3.6",
-      "runtimeHint": "npx",
-      "transport": {
-        "type": "stdio"
-      },
-      "packageArguments": [
-        {
-          "type": "positional",
-          "value": "mcp",
-          "valueHint": "mcp",
-          "description": "Run the MCP server over stdio"
-        }
-      ],
-      "environmentVariables": [
-        {
-          "name": "IDENTITYFORGE_API_KEY",
-          "description": "Optional for browsing Free kits. Required for Pro kits, saved projects, and write operations. Run `npx --yes identityforge@latest login`; signup asks you to confirm your email and then resumes authorization.",
-          "isRequired": false,
-          "isSecret": true
-        }
-      ]
-    }
-  ]
+	"$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+	"name": "io.identityforge/mcp",
+	"title": "Identity Forge",
+	"description": "Design kits, brand naming, and domain research for coding agents.",
+	"websiteUrl": "https://identityforge.io",
+	"repository": {
+		"url": "https://github.com/KasayoDotCom/identityforge-mcp",
+		"source": "github",
+		"id": "1318437995"
+	},
+	"version": "0.3.7",
+	"packages": [
+		{
+			"registryType": "npm",
+			"registryBaseUrl": "https://registry.npmjs.org",
+			"identifier": "identityforge",
+			"version": "0.3.7",
+			"runtimeHint": "npx",
+			"transport": {
+				"type": "stdio"
+			},
+			"packageArguments": [
+				{
+					"type": "positional",
+					"value": "mcp",
+					"valueHint": "mcp",
+					"description": "Run the MCP server over stdio"
+				}
+			],
+			"environmentVariables": [
+				{
+					"name": "IDENTITYFORGE_API_KEY",
+					"description": "Identity Forge API key (ifk_\u2026). Optional for browsing free kits; required for Pro kits, naming boards, and writes. Run `npx --yes identityforge@latest login`; if you need an account, browser signup asks you to confirm your email and then resumes authorization. A confirmed account enables persistent projects, saved work, and authenticated quota.",
+					"isRequired": false,
+					"isSecret": true
+				}
+			]
+		}
+	]
 }
