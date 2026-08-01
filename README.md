@@ -20,6 +20,7 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/identityforge"><img src="https://img.shields.io/npm/v/identityforge" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/identityforge"><img src="https://img.shields.io/npm/dw/identityforge?label=weekly%20downloads" alt="weekly npm downloads"></a>
   <a href="https://github.com/KasayoDotCom/identityforge-mcp/actions/workflows/ci.yml"><img src="https://github.com/KasayoDotCom/identityforge-mcp/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/npm/l/identityforge" alt="MIT license"></a>
 </p>
