@@ -1,0 +1,8 @@
+{
+	"mcpServers": {
+		"identityforge": {
+			"command": "npx",
+			"args": ["--yes", "identityforge@latest", "mcp"]
+		}
+	}
+}
