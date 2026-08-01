@@ -29,13 +29,29 @@ const TOKENS_FILENAME = "acid-signal-black.json"
 
 /** Serves the two exports `applyTheme` fetches, keyed on the format query. */
 function stubExports(
-	bodies: { design?: string; tokens?: string; tokensFilename?: string } = {},
+	bodies: {
+		design?: string
+		tokens?: string
+		tokensFilename?: string
+		requests?: Array<{ url: string; method: string; hasBody: boolean }>
+		failTelemetry?: boolean
+	} = {},
 ): () => void {
 	const originalFetch = globalThis.fetch
 	const originalApiUrl = process.env.IDENTITYFORGE_API_URL
 	process.env.IDENTITYFORGE_API_URL = "http://api.test"
-	globalThis.fetch = async (input) => {
-		const isDesignMd = String(input).includes("format=design-md")
+	globalThis.fetch = async (input, init) => {
+		const url = String(input)
+		bodies.requests?.push({
+			url,
+			method: init?.method ?? "GET",
+			hasBody: init?.body != null,
+		})
+		if (url.endsWith("/applied")) {
+			if (bodies.failTelemetry) throw new Error("telemetry unavailable")
+			return new Response(null, { status: 204 })
+		}
+		const isDesignMd = url.includes("format=design-md")
 		const filename = isDesignMd
 			? "DESIGN.md"
 			: bodies.tokensFilename ?? TOKENS_FILENAME
@@ -51,6 +67,26 @@ function stubExports(
 		else process.env.IDENTITYFORGE_API_URL = originalApiUrl
 	}
 }
+
+test(
+	"a successful apply records one metadata-only completion without depending on telemetry",
+	withTempDir(async (dir) => {
+		const requests: Array<{ url: string; method: string; hasBody: boolean }> = []
+		const restore = stubExports({ requests, failTelemetry: true })
+		try {
+			const result = await apply(dir)
+			assert.equal(result.mode, "applied")
+			assert.equal(existsSync(join(dir, STAMP_FILENAME)), true)
+			assert.deepEqual(requests.at(-1), {
+				url: "http://api.test/api/v1/kits/acid-signal-black/applied",
+				method: "POST",
+				hasBody: false,
+			})
+		} finally {
+			restore()
+		}
+	}),
+)
 
 /** A throwaway directory per test. Never the repo. */
 function withTempDir(

@@ -1,7 +1,7 @@
 # Runs the Identity Forge MCP server over stdio.
 # Glama builds this image to introspect the tool surface, so the server must
-# start and answer tools/list with no API key present. It does: browsing free
-# kits is unauthenticated, and only Pro or write calls need IDENTITYFORGE_API_KEY.
+# start and answer tools/list with no API key present. No kit payloads are
+# bundled here; published Free kits are fetched from identityforge.io.
 
 FROM node:22-alpine AS build
 WORKDIR /app

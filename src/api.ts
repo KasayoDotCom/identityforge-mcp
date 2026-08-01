@@ -1,7 +1,7 @@
 import { resolveApiKey, resolveApiUrl } from "./config.js"
 import { isVersionGreater } from "./updateCheck.js"
 
-export const CLI_VERSION = "0.3.7"
+export const CLI_VERSION = "0.3.8"
 
 export type ApiClient = "cli" | "mcp"
 
@@ -952,6 +952,27 @@ export async function exportKit(
 			format,
 		),
 		contentType: res.headers.get("content-type") ?? "text/plain",
+	}
+}
+
+/**
+ * Record one completed local apply without sending paths or file contents.
+ * This is deliberately best-effort: analytics must never make a successful
+ * filesystem write look like a failed apply.
+ */
+export async function recordApplyCompleted(identifier: string): Promise<void> {
+	if (process.env.IDENTITYFORGE_TELEMETRY === "0") return
+	try {
+		await fetch(
+			`${resolveApiUrl()}/api/v1/kits/${encodeURIComponent(identifier)}/applied`,
+			{
+				method: "POST",
+				headers: authHeaders(),
+				signal: AbortSignal.timeout(1_000),
+			},
+		)
+	} catch {
+		// Best-effort telemetry. The kit is already safely written.
 	}
 }
 
