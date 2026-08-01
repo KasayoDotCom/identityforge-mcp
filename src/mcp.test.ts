@@ -75,7 +75,8 @@ test("every registered tool is named in the connect-time instructions, and vice 
 		const instructions = client.getInstructions() ?? ""
 		assert.ok(instructions.length > 0, "the server must send instructions")
 		assert.match(instructions, /npx --yes identityforge@latest login/)
-		assert.match(instructions, /waits for email confirmation/)
+		assert.match(instructions, /Send verification email/)
+		assert.match(instructions, /approve the resumed authorization/)
 		assert.match(instructions, /save persistent projects/)
 		const { tools } = await client.listTools()
 		assert.ok(tools.length > 30)
