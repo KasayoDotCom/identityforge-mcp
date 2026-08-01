@@ -1,7 +1,11 @@
 import { createHash } from "node:crypto"
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import { isAbsolute, join, relative, resolve, sep } from "node:path"
-import { exportKit, isSafeExportFilename } from "./api.js"
+import {
+	exportKit,
+	isSafeExportFilename,
+	recordApplyCompleted,
+} from "./api.js"
 
 // Applying a kit writes into someone else's repository, so it is the one place
 // in this CLI that can destroy work. The rule here: never overwrite a file we
@@ -577,6 +581,7 @@ export async function applyTheme(
 		appliedAt,
 	}
 	writeFileSync(stampPath, `${JSON.stringify(stamp, null, 2)}\n`, "utf8")
+	await recordApplyCompleted(identity.slug ?? options.slug)
 
 	return { ...result, mode: "applied", overwritten, stamp }
 }

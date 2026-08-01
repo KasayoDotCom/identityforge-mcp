@@ -440,9 +440,12 @@ Commands authenticate with an Identity Forge API key (`ifk_…`). `login` stores
 ```bash
 export IDENTITYFORGE_API_KEY=ifk_…
 export IDENTITYFORGE_API_URL=https://identityforge.io   # override the API base
+export IDENTITYFORGE_TELEMETRY=0                        # optional: disable apply-completion counting
 ```
 
 Free kits and naming-recipe discovery work without a key. Sign in to keep persistent projects and saved work under an authenticated quota. Owned naming projects and domain research use `naming:read`, generation and board edits use `naming:write`, reading design systems uses `kits:read`, and creating or remixing kits plus building shareable brand projects uses `kits:write`. API calls count against the plan's API quota, while generation separately spends AI credits for successfully persisted unique candidates. Manage keys at <https://identityforge.io/account/api-keys>.
+
+After a successful local apply, the client sends one metadata-only completion request so aggregate builds can be counted. It includes the kit identifier plus the client name and version already present in every API request. It never sends the repository path or file contents, never changes the apply result, and can be disabled with `IDENTITYFORGE_TELEMETRY=0`.
 
 Existing design-only keys are not silently upgraded. If a key reports that it is missing `naming:read` or `naming:write`, create a scoped key or run browser login again.
 
@@ -455,7 +458,7 @@ docker build -t identityforge-mcp .
 docker run -i --rm -e IDENTITYFORGE_API_KEY=ifk_… identityforge-mcp
 ```
 
-The key is optional. Without it the server still starts and serves free kits.
+The image contains no kit payloads. The key is optional: without one, the server still starts and fetches published Free kits from the Identity Forge platform API. Pro kits, saved work, and writes require an account key.
 
 ## Links
 

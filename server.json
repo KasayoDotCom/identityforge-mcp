@@ -9,13 +9,13 @@
 		"source": "github",
 		"id": "1318437995"
 	},
-	"version": "0.3.7",
+	"version": "0.3.8",
 	"packages": [
 		{
 			"registryType": "npm",
 			"registryBaseUrl": "https://registry.npmjs.org",
 			"identifier": "identityforge",
-			"version": "0.3.7",
+			"version": "0.3.8",
 			"runtimeHint": "npx",
 			"transport": {
 				"type": "stdio"
