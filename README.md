@@ -37,6 +37,21 @@ Public Free kits work without an account. [Browse the design kits](https://ident
 or [read how the agent flow works](https://identityforge.io/for-agents) before
 installing anything.
 
+### Watch it work
+
+The three-minute lifecycle film follows a design system from the first choice
+through later updates, an older-site rebuild, and a client handoff.
+
+<p align="center">
+  <a href="https://github.com/KasayoDotCom/identityforge-mcp/releases/download/v0.3.8/identity-forge-lifecycle-explainer.mp4">
+    <img src="https://raw.githubusercontent.com/KasayoDotCom/identityforge-mcp/main/assets/identity-forge-lifecycle-explainer.jpg" alt="Identity Forge rebuilding an older product with an agent-ready design system" width="1200">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/KasayoDotCom/identityforge-mcp/releases/download/v0.3.8/identity-forge-lifecycle-explainer.mp4">Watch the lifecycle explainer with sound</a>
+</p>
+
 ## For agents
 
 Install the local MCP server into the client you use:
