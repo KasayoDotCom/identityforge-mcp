@@ -6,13 +6,16 @@
 
 <h1 align="center">Identity Forge MCP</h1>
 
-<p align="center">Design systems, brand naming, and domain research for coding agents.</p>
+<p align="center"><strong>The branding pipeline for the agentic era.</strong></p>
+
+<p align="center">Give coding agents a complete design system, then carry it from first build to later updates and client handoff.</p>
 
 <p align="center">
   <a href="#for-people">For people</a> ·
   <a href="#for-agents">For agents</a> ·
-  <a href="#mcp-tools">MCP tools</a> ·
-  <a href="#cli-commands">CLI reference</a>
+  <a href="#capabilities">Capabilities</a> ·
+  <a href="#watch-it-work">Watch it work</a> ·
+  <a href="#reference">Reference</a>
 </p>
 
 <p align="center">
@@ -23,58 +26,65 @@
 
 ## For people
 
-Identity Forge gives a coding agent a complete visual system before it starts
-building. Choose a design kit yourself, or let the agent rank the catalog
-against your product and the mood you want. Each kit includes typography,
-semantic color tokens, layout, motifs, dos and don'ts, and a `DESIGN.md` the
-agent can build from.
+- **Start with a complete design kit.** Typography, semantic color tokens, layout, spacing, motifs, dos and don'ts, and an implementation-ready `DESIGN.md` travel together.
+- **Choose with evidence.** Your agent can search the catalog, rank kits for the product and its surfaces, inspect the full brief, and compare nearby directions.
+- **Apply safely.** Identity Forge writes the brief, tokens, and a version stamp, then protects files that changed locally.
+- **Compose the whole brand.** Add an image direction, interface style, and page recipes while keeping the supplied product, person, or object recognizable.
+- **Carry decisions forward.** Version history, drift checks, naming and domain research, saved projects, client shares, and feedback stay in the same workflow.
 
-The agent can export the kit as CSS, Tailwind v3 or v4, shadcn registry data,
-DTCG tokens, or JSON, then apply it with conflict protection. Brand naming,
-domain research, and shareable client projects live in the same workflow.
+Public Free kits are ready immediately. An account adds persistent projects, saved work, authenticated quota, and Pro access.
 
-Public Free kits work without an account. [Browse the design kits](https://identityforge.io/kits)
-or [read how the agent flow works](https://identityforge.io/for-agents) before
-installing anything.
-
-### Watch it work
-
-The three-minute lifecycle film follows a design system from the first choice
-through later updates, an older-site rebuild, and a client handoff.
-
-https://github.com/user-attachments/assets/b5125f58-6918-4355-b849-6863a4345a21
-
-[Download the full-resolution 1080p WebM](https://github.com/KasayoDotCom/identityforge-mcp/releases/download/v0.3.9/identity-forge-lifecycle-explainer.webm).
+[Browse the design kits](https://identityforge.io/kits) · [See the agent workflow](https://identityforge.io/for-agents) · [Read the HTTP API](https://identityforge.io/api/v1)
 
 ## For agents
 
-Install the local MCP server into the client you use:
+Install the local MCP server into your coding agent:
 
 ```bash
-npx --yes identityforge@latest install --client claude-code   # Claude Code
-npx --yes identityforge@latest install --client cursor        # Cursor
-npx --yes identityforge@latest install --client vscode        # VS Code / Copilot
-npx --yes identityforge@latest install --client codex         # Codex
+npx --yes identityforge@latest install --client claude-code
 ```
 
-Also supported: `gemini`, `opencode`, `pi`. Every client runs the same local
-stdio server, and `install` merges into your existing config rather than
-replacing it. Config paths for all seven are in
-[Install into an agent](#install-into-an-agent).
+Use `cursor`, `vscode`, `codex`, `gemini`, `opencode`, or `pi` in place of
+`claude-code`. The installer merges the MCP entry into the client's existing
+configuration.
 
-Public Free kits work immediately, without a key. Tell your agent:
+Then tell your agent:
 
 > Use Identity Forge to pick a theme that fits this product, apply it, and follow the DESIGN.md.
 
-Sign in for persistent projects, saved work, authenticated quota, or Pro access:
+Sign in when you want persistent projects, saved work, authenticated quota, or Pro access:
 
 ```bash
 npx --yes identityforge@latest login
 ```
 
-No account yet? Browser signup sends a confirmation email. Open the email link
-and confirm on the page; the pending CLI authorization then resumes
-automatically.
+For a new account, browser signup sends a confirmation email. Confirming it resumes the pending CLI authorization automatically.
+
+## Capabilities
+
+Once connected, your agent gets 61 tools grouped around real jobs:
+
+- **Find the right system:** search, rank, compare, and inspect complete design kits.
+- **Build from it:** export `DESIGN.md`, CSS, Tailwind v3 or v4, shadcn registry data, DTCG tokens, or JSON.
+- **Apply and maintain it:** preview writes, protect local changes, inspect status, compare versions, and follow drift.
+- **Direct the presentation:** codify image directions, interface styles, and page recipes around the chosen kit.
+- **Build a client-ready brand:** compose variations, generate mockups, share a review link, and act on feedback.
+- **Name and research:** manage a persistent naming board and collect domain, trademark, registrar, DNS, RDAP, and search evidence.
+
+## Watch it work
+
+The three-minute lifecycle film follows a design system from the first choice through later updates, an older-site rebuild, and a client handoff.
+
+https://github.com/user-attachments/assets/b5125f58-6918-4355-b849-6863a4345a21
+
+[Download the full-resolution 1080p WebM](https://github.com/KasayoDotCom/identityforge-mcp/releases/download/v0.3.9/identity-forge-lifecycle-explainer.webm).
+
+## Reference
+
+The complete behavior and command inventory stays here for agents and implementation work. Expand only the part you need.
+
+<details>
+<summary><strong>Discovery and installation details</strong></summary>
 
 ## Judged discovery
 
@@ -136,6 +146,11 @@ npx skills add KasayoDotCom/identityforge-mcp
 
 Cursor metadata is included for directory distribution. Until it is listed there, use
 the `install --client cursor` command above to connect the same MCP server.
+
+</details>
+
+<details>
+<summary><strong>MCP tools, workflows, safety, and version behavior</strong></summary>
 
 ## MCP tools
 
@@ -348,6 +363,11 @@ Pass the slug when a person typed it. Store the id for anything your agent keeps
 
 Image directions, interface styles, and page recipes carry ids too, and the same advice applies more strongly: they have no alias table, so a renamed slug there simply stops resolving.
 
+</details>
+
+<details>
+<summary><strong>Full CLI command reference</strong></summary>
+
 ## CLI commands
 
 ```bash
@@ -481,6 +501,11 @@ identityforge themes update my-kit --kit kit.json --expected-updated-at "$MARKER
 
 **The marker is opaque. Echo it back byte for byte and never parse it.** It crosses the wire as a raw Postgres timestamp rather than ISO-8601, and the guard compares strings, so a client that parses it into a `Date` and serialises it back never matches and gets `409` forever. Parsing also drops the microseconds, so a comparison that normalises both sides can falsely match and let a genuinely stale write through. A curated catalog kit has no marker, because it has no row and cannot be edited.
 
+</details>
+
+<details>
+<summary><strong>Authentication, telemetry, and Docker</strong></summary>
+
 ## Authentication
 
 Commands authenticate with an Identity Forge API key (`ifk_…`). `login` stores it in `~/.identityforge/config.json` with mode `600`. You can also set it per shell:
@@ -507,6 +532,8 @@ docker run -i --rm -e IDENTITYFORGE_API_KEY=ifk_… identityforge-mcp
 ```
 
 The image contains no kit payloads. The key is optional: without one, the server still starts and fetches published Free kits from the Identity Forge platform API. Pro kits, saved work, and writes require an account key.
+
+</details>
 
 ## Links
 
