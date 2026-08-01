@@ -28,6 +28,24 @@ const MCP = readFileSync(
 	fileURLToPath(new URL("./mcp.ts", import.meta.url)),
 	"utf8",
 )
+const LOGIN = readFileSync(
+	fileURLToPath(new URL("./login.ts", import.meta.url)),
+	"utf8",
+)
+const SERVER = readFileSync(
+	fileURLToPath(new URL("../server.json", import.meta.url)),
+	"utf8",
+)
+
+test("agent-facing signup guidance matches the explicit verification flow", () => {
+	for (const source of [README, MCP, LOGIN, SERVER]) {
+		assert.match(source, /Send verification email/)
+		assert.doesNotMatch(
+			source,
+			/browser signup sends (?:a )?(?:confirmation|verification) email|signup waits for email confirmation/i,
+		)
+	}
+})
 
 /**
  * Commander's tree is built as `const themes = program.command("themes")` and

@@ -72,9 +72,10 @@ Sign in for persistent projects, saved work, authenticated quota, or Pro access:
 npx --yes identityforge@latest login
 ```
 
-No account yet? Browser signup sends a confirmation email. Open the email link
-and confirm on the page; the pending CLI authorization then resumes
-automatically.
+No account yet? In the browser, sign up, complete the security check, select
+`Send verification email`, and open its link. Then select
+`Confirm email and continue`, approve the resumed authorization, and the CLI
+receives the key automatically.
 
 ## Judged discovery
 
@@ -111,8 +112,8 @@ All of them run the same local stdio server via `npx -y identityforge@latest mcp
 ### Install the agent plugin and skill
 
 The repository also bundles the MCP server with an Agent Skill that tells the agent when
-to use Identity Forge, how free and authenticated access differ, and how browser signup
-resumes after email confirmation.
+to use Identity Forge, how free and authenticated access differ, and how to guide a human
+through `Send verification email` before the pending browser authorization resumes.
 
 Claude Code:
 

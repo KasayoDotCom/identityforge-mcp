@@ -19,9 +19,10 @@ If authentication is needed and `whoami` shows no account, tell the user to run:
 npx --yes identityforge@latest login
 ```
 
-Explain that browser signup requires opening the confirmation email. Once they confirm,
-the pending CLI authorization resumes automatically. Never ask the user to paste an
-`ifk_...` key into the conversation.
+For a new email-password account, guide the human through browser signup: complete the
+security check, select Send verification email, open its link, select Confirm email and
+continue, then approve the resumed authorization. The CLI receives the key automatically.
+Never ask the user to paste a password or `ifk_...` key into the conversation.
 
 For design work, browse or search kits, inspect the chosen kit's DESIGN.md and tokens, and
 use `apply_theme` only after the user has chosen a direction. Preview before overwriting a

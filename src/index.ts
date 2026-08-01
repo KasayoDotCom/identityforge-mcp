@@ -1950,7 +1950,9 @@ program
 
 program
 	.command("login")
-	.description("Connect your Identity Forge account to this machine.")
+	.description(
+		"Open a browser to sign in. New accounts select Send verification email before approval; PKCE returns the key to this machine.",
+	)
 	.option(
 		"-k, --key <ifk_…>",
 		"Store an API key directly (create one at /account/api-keys).",
@@ -1987,7 +1989,7 @@ program
 			process.stderr.write(
 				`\n${
 					err instanceof Error ? err.message : String(err)
-				}\n\nIf this machine has no browser, create a key at ${resolveApiUrl()}/account/api-keys and run:\n  identityforge login --key ifk_…\n`,
+				}\n\nIf this machine has no browser, ask the human to open ${resolveApiUrl()}/account/api-keys. For a new account, they must use Send verification email and open its link before creating a key. Then run:\n  identityforge login --key ifk_…\n`,
 			)
 			process.exit(1)
 		}

@@ -9,13 +9,13 @@
 		"source": "github",
 		"id": "1318437995"
 	},
-	"version": "0.3.9",
+	"version": "0.3.10",
 	"packages": [
 		{
 			"registryType": "npm",
 			"registryBaseUrl": "https://registry.npmjs.org",
 			"identifier": "identityforge",
-			"version": "0.3.9",
+			"version": "0.3.10",
 			"runtimeHint": "npx",
 			"transport": {
 				"type": "stdio"
@@ -31,7 +31,7 @@
 			"environmentVariables": [
 				{
 					"name": "IDENTITYFORGE_API_KEY",
-					"description": "Identity Forge API key (ifk_\u2026). Optional for browsing free kits; required for Pro kits, naming boards, and writes. Run `npx --yes identityforge@latest login`; if you need an account, browser signup asks you to confirm your email and then resumes authorization. A confirmed account enables persistent projects, saved work, and authenticated quota.",
+					"description": "Identity Forge API key (ifk_\u2026). Optional for browsing free kits; required for Pro kits, naming boards, and writes. Run `npx --yes identityforge@latest login`; for a new email-password account, complete browser signup, select Send verification email, open its link, and approve the resumed authorization. A confirmed account enables persistent projects, saved work, and authenticated quota.",
 					"isRequired": false,
 					"isSecret": true
 				}

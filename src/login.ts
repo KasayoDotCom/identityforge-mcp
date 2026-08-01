@@ -126,7 +126,7 @@ export async function browserLogin(): Promise<CliTokenResult> {
 			authorizeUrl.searchParams.set("label", label)
 			const href = authorizeUrl.toString()
 			process.stdout.write(
-				`Opening your browser to sign in…\nNo account yet? Create one there and confirm the email; this login resumes automatically.\nIf it doesn't open, paste this URL:\n  ${href}\n`,
+				`Opening your browser to sign in…\nNo account yet? Sign up there, complete the security check, select Send verification email, and open its link.\nThen approve the resumed authorization; the CLI receives the key automatically.\nIf it doesn't open, paste this URL:\n  ${href}\n`,
 			)
 			openBrowser(href)
 		})
