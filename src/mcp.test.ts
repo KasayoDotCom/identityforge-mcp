@@ -153,7 +153,7 @@ test("irreversible MCP tools require a structural confirm boolean", async () => 
 	})
 })
 
-test("mockup and trademark tools describe spend without confirmation gates", async () => {
+test("mockup spend and the EUIPO production gate need no confirmation field", async () => {
 	await withClient(async (client) => {
 		const { tools } = await client.listTools()
 		const byName = new Map(tools.map((tool) => [tool.name, tool]))
@@ -172,7 +172,11 @@ test("mockup and trademark tools describe spend without confirmation gates", asy
 			)
 		}
 		assert.match(byName.get("generate_mockups")?.description ?? "", /AI credit/)
-		assert.match(byName.get("search_trademarks")?.description ?? "", /quota/)
+		assert.match(byName.get("search_trademarks")?.description ?? "", /coming soon/i)
+		assert.match(
+			byName.get("search_trademarks")?.description ?? "",
+			/without calling the provider/,
+		)
 	})
 })
 
@@ -443,12 +447,10 @@ test("an empty kit timeline explains why instead of returning nothing", async ()
 				slug: "sage-slate-editorial",
 			})
 			assert.equal(isError, false)
-			// An empty array is a correct answer and a useless one. A catalog kit
-			// has no history because it is shipped rather than edited, and an agent
-			// that is not told this reads "[]" as a bug in the tool or the kit.
+			// An empty array is correct but ambiguous, so explain version 0.
 			assert.match(text, /no recorded versions/)
 			assert.match(text, /current version is 0/)
-			assert.match(text, /saved under your own key/)
+			assert.match(text, /no version has been minted yet/)
 		})
 	} finally {
 		restore()

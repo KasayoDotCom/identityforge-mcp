@@ -469,9 +469,9 @@ function versionPageOpts(opts: { limit?: string; before?: string }) {
 	}
 }
 
-function versionRangeOpts(opts: { from?: string; to?: string }) {
+function versionRangeOpts(opts: { from: string; to?: string }) {
 	return {
-		from: opts.from == null ? undefined : intOption(opts.from, "--from"),
+		from: intOption(opts.from, "--from"),
 		to: opts.to == null ? undefined : intOption(opts.to, "--to"),
 	}
 }
@@ -480,7 +480,7 @@ themes
 	.command("versions")
 	.argument("<id-or-slug>", "Permanent kit id, or its slug.")
 	.description(
-		"List a kit's edit history, newest first: version, when, by whom, and the author's note. Only kits saved under an API key have history; a curated catalog kit is shipped rather than edited, so its timeline is empty and its current version stays 0.",
+		"List a kit's edit history, newest first: version, when, by whom, and the author's note. Saved kits and managed catalog kits accumulate versions; static catalog fallbacks remain at version 0 until they are promoted into the managed catalog.",
 	)
 	.option("--limit <n>", "Rows per page, newest first. Default 50, max 200.")
 	.option("--before <n>", "Return versions below this number, for paging.")
@@ -519,15 +519,15 @@ themes
 	.description(
 		"Show what changed between two versions of a kit: the paths that moved, their old and new values, and the CSS variable each token change drives. Pass --from alone to compare against the current version, which is the question a repo asks after reading its stamp. For a Pro kit you are not entitled to, changes come back with their values withheld and marked redacted, so you still see what moved.",
 	)
-	.option(
+	.requiredOption(
 		"--from <n>",
-		"Lower bound, usually the version recorded in your identityforge.json.",
+		"Lower bound, usually the version recorded in identityforge.json. Use 0 for the first recorded state.",
 	)
 	.option(
 		"--to <n>",
 		"Upper bound. Omit to compare against the current version.",
 	)
-	.action(async (identifier: string, opts: { from?: string; to?: string }) => {
+	.action(async (identifier: string, opts: { from: string; to?: string }) => {
 		try {
 			const { data, meta } = await diffKitVersions(
 				identifier,
@@ -1413,12 +1413,12 @@ brand
 		"Show what changed between two versions of a brand project. Pass --from alone to compare against the current version. Owner-scoped, so nothing is withheld.",
 	)
 	.requiredOption("--project <uuid>", "Brand project id.")
-	.option("--from <n>", "Lower bound.")
+	.requiredOption("--from <n>", "Lower bound. Use 0 for the first recorded state.")
 	.option(
 		"--to <n>",
 		"Upper bound. Omit to compare against the current version.",
 	)
-	.action(async (opts: { project: string; from?: string; to?: string }) => {
+	.action(async (opts: { project: string; from: string; to?: string }) => {
 		try {
 			const { data, meta } = await diffBrandProjectVersions(
 				opts.project,
@@ -1838,7 +1838,7 @@ naming
 	.description(
 		`Execute model-authored evidence queries (${NAME_RESEARCH_PURPOSES.join(
 			", ",
-		)}); Identity Forge returns results, not verdicts.`,
+		)}); Identity Forge returns results, not verdicts. Each query uses one account-wide monthly unit.`,
 	)
 	.requiredOption(
 		"--file <path>",
@@ -1857,7 +1857,7 @@ naming
 naming
 	.command("trademarks")
 	.description(
-		"Screen one owned naming candidate against EUIPO. Uses the shared trademark-search quota and is not legal clearance.",
+		"EUIPO screening is coming soon. Until production access is enabled, this returns 503 without calling the provider.",
 	)
 	.argument("<query>", "Verbal element to search.")
 	.requiredOption("--project <uuid>", "Naming project id.")
@@ -1888,7 +1888,7 @@ naming
 naming
 	.command("domains")
 	.description(
-		"Always check DNS plus RDAP and optional SERP evidence. No DNS records only means a domain might be available; visit it and verify with a registrar.",
+		"Check DNS plus RDAP for 1 unit per unique domain; optional self-hosted SERP adds 1 unit per domain. No DNS records only means a domain might be available.",
 	)
 	.argument("<domains...>", "One to 20 bare domain names.")
 	.option("--serp", "Include bounded SERP collision signals.")
@@ -2033,7 +2033,7 @@ program
 		}
 		const quota =
 			me.quota.limit == null
-				? `${me.quota.used} units used (unmetered key)`
+				? `${me.quota.used} units used (unmetered account)`
 				: `${me.quota.used} of ${me.quota.limit} units used, ${me.quota.remaining} left, resets ${me.quota.resetsAt}`
 		const kits =
 			me.kits.limit == null
