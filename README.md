@@ -6,54 +6,69 @@
 
 <h1 align="center">Identity Forge MCP</h1>
 
-<p align="center"><strong>The branding pipeline for the agentic era.</strong></p>
-
-<p align="center">Give coding agents a complete design system, then carry it from first build to later updates and client handoff.</p>
+<p align="center">Design systems, brand naming, and domain research for coding agents.</p>
 
 <p align="center">
   <a href="#for-people">For people</a> ·
   <a href="#for-agents">For agents</a> ·
-  <a href="#capabilities">Capabilities</a> ·
-  <a href="#watch-it-work">Watch it work</a> ·
-  <a href="#reference">Reference</a>
+  <a href="#mcp-tools">MCP tools</a> ·
+  <a href="#cli-commands">CLI reference</a>
 </p>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/identityforge"><img src="https://img.shields.io/npm/v/identityforge" alt="npm version"></a>
-  <a href="https://www.npmjs.com/package/identityforge"><img src="https://img.shields.io/npm/dw/identityforge?label=weekly%20downloads" alt="weekly npm downloads"></a>
   <a href="https://github.com/KasayoDotCom/identityforge-mcp/actions/workflows/ci.yml"><img src="https://github.com/KasayoDotCom/identityforge-mcp/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/npm/l/identityforge" alt="MIT license"></a>
 </p>
 
 ## For people
 
-- **Start with a complete design kit.** Typography, semantic color tokens, layout, spacing, motifs, dos and don'ts, and an implementation-ready `DESIGN.md` travel together.
-- **Choose with evidence.** Your agent can search the catalog, rank kits for the product and its surfaces, inspect the full brief, and compare nearby directions.
-- **Apply safely.** Identity Forge writes the brief, tokens, and a version stamp, then protects files that changed locally.
-- **Compose the whole brand.** Add an image direction, interface style, and page recipes while keeping the supplied product, person, or object recognizable.
-- **Carry decisions forward.** Version history, drift checks, naming and domain research, saved projects, client shares, and feedback stay in the same workflow.
+Identity Forge gives a coding agent a complete visual system before it starts
+building. Choose a design kit yourself, or let the agent rank the catalog
+against your product and the mood you want. Each kit includes typography,
+semantic color tokens, layout, motifs, dos and don'ts, and a `DESIGN.md` the
+agent can build from.
 
-Public Free kits are ready immediately. An account adds persistent projects, saved work, authenticated quota, and Pro access.
+The agent can export the kit as CSS, Tailwind v3 or v4, shadcn registry data,
+DTCG tokens, or JSON, then apply it with conflict protection. Brand naming,
+domain research, and shareable client projects live in the same workflow.
 
-[Browse the design kits](https://identityforge.io/kits) · [See the agent workflow](https://identityforge.io/for-agents) · [Read the HTTP API](https://identityforge.io/api/v1)
+Public Free kits work without an account. [Browse the design kits](https://identityforge.io/kits)
+or [read how the agent flow works](https://identityforge.io/for-agents) before
+installing anything.
+
+### Watch it work
+
+The three-minute lifecycle film follows a design system from the first choice
+through later updates, an older-site rebuild, and a client handoff. The Aubade
+storefront, Shiftly rebuild, and Kestrel rebrand are complete one-shot agent
+builds from real Identity Forge design systems.
+
+https://github.com/user-attachments/assets/e139a54f-8b06-4ba0-830f-0a476533d166
+
+[Download the full-resolution 1080p WebM](https://github.com/KasayoDotCom/identityforge-mcp/releases/download/v0.3.10/identity-forge-lifecycle-explainer-v2.webm).
 
 ## For agents
 
-Install the local MCP server into your coding agent:
+Install the local MCP server into the client you use:
 
 ```bash
-npx --yes identityforge@latest install --client claude-code
+npx --yes identityforge@latest install --client claude-code   # Claude Code
+npx --yes identityforge@latest install --client cursor        # Cursor
+npx --yes identityforge@latest install --client vscode        # VS Code / Copilot
+npx --yes identityforge@latest install --client codex         # Codex
 ```
 
-Use `cursor`, `vscode`, `codex`, `gemini`, `opencode`, or `pi` in place of
-`claude-code`. The installer merges the MCP entry into the client's existing
-configuration.
+Also supported: `gemini`, `opencode`, `pi`. Every client runs the same local
+stdio server, and `install` merges into your existing config rather than
+replacing it. Config paths for all seven are in
+[Install into an agent](#install-into-an-agent).
 
-Then tell your agent:
+Public Free kits work immediately, without a key. Tell your agent:
 
 > Use Identity Forge to pick a theme that fits this product, apply it, and follow the DESIGN.md.
 
-Sign in when you want persistent projects, saved work, authenticated quota, or Pro access:
+Sign in for persistent projects, saved work, authenticated quota, or Pro access:
 
 ```bash
 npx --yes identityforge@latest login
@@ -64,41 +79,15 @@ No account yet? In the browser, sign up, complete the security check, select
 `Confirm email and continue`, approve the resumed authorization, and the CLI
 receives the key automatically.
 
-## Capabilities
+## Use-case discovery
 
-Once connected, your agent gets 61 tools grouped around real jobs:
+Every use-case lane has two checks. First, the kit's authored audience or `bestFor` must name that kind of product. Then concrete token measurements such as text contrast, chart-series distinctness, and information density rank the eligible kits. Visual tags help search but do not establish product fit. A high technical score cannot put an unrelated kit into a lane. The per-lane prose justification is switched off catalogue-wide pending re-enrichment, so a score arrives without a sentence explaining it.
 
-- **Find the right system:** search, rank, compare, and inspect complete design kits.
-- **Build from it:** export `DESIGN.md`, CSS, Tailwind v3 or v4, shadcn registry data, DTCG tokens, or JSON.
-- **Apply and maintain it:** preview writes, protect local changes, inspect status, compare versions, and follow drift.
-- **Direct the presentation:** codify image directions, interface styles, and page recipes around the chosen kit.
-- **Build a client-ready brand:** compose variations, generate mockups, share a review link, and act on feedback.
-- **Name and research:** manage a persistent naming board and collect domain, trademark, registrar, DNS, RDAP, and search evidence.
-
-## Watch it work
-
-The three-minute lifecycle film follows a design system from the first choice through later updates, an older-site rebuild, and a client handoff. The Aubade storefront, Shiftly rebuild, and Kestrel rebrand are complete one-shot agent builds from real Identity Forge design systems.
-
-https://github.com/user-attachments/assets/e139a54f-8b06-4ba0-830f-0a476533d166
-
-[Download the full-resolution 1080p WebM](https://github.com/KasayoDotCom/identityforge-mcp/releases/download/v0.3.10/identity-forge-lifecycle-explainer-v2.webm).
-
-## Reference
-
-The complete behavior and command inventory stays here for agents and implementation work. Expand only the part you need.
-
-<details>
-<summary><strong>Discovery and installation details</strong></summary>
-
-## Judged discovery
-
-Every kit in the catalog is scored per use case against concrete criteria measured on its own tokens: chart-series distinctness, text contrast, information density, and similar, rather than keyword matching. The per-lane prose justification is switched off catalogue-wide pending re-enrichment, so a score arrives without a sentence explaining it. Your agent can use the scores directly:
-
-- `list_themes({ use: "data-dashboard" })` re-orders the catalog by fitness for dashboards rather than narrowing it, each kit carrying a score from 0 to 100 computed from its own tokens against the lane's criteria.
+- `list_themes({ use: "data-dashboard" })` returns kits authored for dashboards, ordered by their measured dashboard fit.
 - `list_themes({ q: "calm fintech dashboard" })` runs a synonym-aware ranked search across moods, industries, and use cases.
 - `search_themes` returns the whole catalog unranked so the agent can weigh a subtle brief itself.
 
-Read the order, not the number. The score measures how well a kit is built against a lane's criteria, and every catalog kit is well built, so the scores cluster high and the documented cut excludes almost nothing. A lane changes which kits come first, not which kits come back.
+Use the lane to shortlist and the order to compare. Do not turn the score into an explanation: it ranks technical fit after authored intent, but does not say why the kit suits a particular brief.
 
 For the data lanes there is a better answer than the score. Every kit summary carries a `charts` block measured on the mode the kit ships in: `minDeltaE` and `cvdMinDeltaE` (the closest pair of series colors, plain and under colorblind simulation), `distinct`, `hueFamilies`, `severityHeadroom` (how close any series comes to the destructive, warning and success roles — 0 means a category color IS a status color), `sequentialReady`, and `designed`, which is `false` when the kit defines no chart slots and the five were cycled from its brand roles. Those are measurements, so unlike the fitness score they can be stated to a user as the reason for a recommendation.
 
@@ -150,11 +139,6 @@ npx skills add KasayoDotCom/identityforge-mcp
 
 Cursor metadata is included for directory distribution. Until it is listed there, use
 the `install --client cursor` command above to connect the same MCP server.
-
-</details>
-
-<details>
-<summary><strong>MCP tools, workflows, safety, and version behavior</strong></summary>
 
 ## MCP tools
 
@@ -256,11 +240,14 @@ These answer questions a kit does not. None of them replace the kit.
 - `list_interface_styles` / `get_interface_style`: choose and export a neutral render grammar for surfaces and hierarchy, applied through a kit.
 - `list_page_recipes` / `get_page_recipe`: choose and export how a page should argue its case.
 
-When the user supplies a real product, person, or object, keep that reference recognizable. Use
-the chosen image direction to shape project-specific presentation routes around it: setting,
-supporting elements, composition, lighting, surfaces, crop, finish, and variation rules. After the
-person chooses, codify the route for the image model they use. Identity Forge provides the brief;
-it does not render the images in this flow.
+When the user supplies a real product, person, or object, use the approved image as fixed input to a
+reference-preserving image editor. Shape project-specific presentation routes around it: setting,
+supporting elements, composition, lighting, surfaces, crop, finish, and variation rules. Keep the
+source identity exact, compare every result with it at full resolution, and avoid recreating an
+existing product from text or placing a cutout over a separately generated background. If the
+current agent cannot perform reference-led editing, hand the source image and exported direction to
+a product-image workflow. Identity Forge provides the brief; it does not render the images in this
+flow.
 
 ### Author kits and brands (`kits:write`)
 
@@ -311,7 +298,7 @@ again mints a new token and deliberately never the old one. It refuses without `
 
 None of these writes anything. Restoring an old state is an `update_theme` call you make deliberately.
 
-**What actually has history.** Only kits saved under an API key accumulate versions: a curated catalog kit is shipped rather than edited, so its timeline is empty and its version stays `0`. On brand projects the whole brand is recorded: name and domain, fonts, pinned layers, project context, and the variations, including a reorder. What is deliberately not recorded is sharing — who may see a brand is not what the brand is. A project that has not been written since versioning was wired shows an empty timeline because the record starts there, not because nothing happened to it.
+**What actually has history.** Saved kits and managed catalog kits accumulate versions. A static catalog fallback stays at version `0` until it is promoted into the managed catalog. The separate kit history ledger remains owner-only and records creation, saves, and applications to a brand. On brand projects the whole brand is recorded: name and domain, fonts, pinned layers, project context, and the variations, including a reorder. What is deliberately not recorded is sharing, because who may see a brand is not what the brand is.
 
 **What a Pro gate does to them.** For a kit you are not entitled to, the timeline still lists versions but the author's free-text note is `null`, and a diff returns each change marked `redacted: true` with its path and CSS variable but no before or after, plus a `redactedChanges` count. `get_kit_version` returns the whole payload, so it answers 403 instead.
 
@@ -325,8 +312,9 @@ None of these writes anything. Restoring an old state is an `update_theme` call 
 - `list_name_generations`: audit model, prompt, request, and credit provenance.
 - `move_name_candidates` and `rank_name_candidates`: atomically review, shortlist, rank, and select.
 - `get_naming_research_context`: read the brief, board, evidence, capabilities, and small-task handoff contract, without server ranking.
-- `search_name_evidence`: run bounded model-authored searches and return evidence without verdicts.
-- `check_domains`: DNS plus distinct RDAP, registrar, and optional SERP evidence. Absent DNS records only mean a domain might be available, so verify at a registrar before promising it to anyone.
+- `search_name_evidence`: run bounded model-authored searches through self-hosted SearXNG and return evidence without verdicts. One account-wide monthly unit per query.
+- `check_domains`: DNS plus distinct RDAP, registrar, and optional self-hosted SERP evidence. Basic research costs one unit per unique domain; SERP adds one. Absent DNS records only mean a domain might be available.
+- `search_trademarks`: EUIPO automation is coming soon and returns 503 without a provider call until production access is enabled.
 
 ### Build a brand and share it with a client
 
@@ -366,11 +354,6 @@ Every kit has an opaque `id` and a `slug`, and either one addresses it directly,
 Pass the slug when a person typed it. Store the id for anything your agent keeps: a config value, a version stamp, a choice it repeats in a later session. `list_themes` prints both.
 
 Image directions, interface styles, and page recipes carry ids too, and the same advice applies more strongly: they have no alias table, so a renamed slug there simply stops resolving.
-
-</details>
-
-<details>
-<summary><strong>Full CLI command reference</strong></summary>
 
 ## CLI commands
 
@@ -460,6 +443,7 @@ identityforge naming candidates --project <uuid> --status shortlisted,finalist
 identityforge naming generations --project <uuid>
 identityforge naming research-context --project <uuid>
 identityforge naming search --file research-tasks.json
+# Coming soon: returns 503 without a provider call until EUIPO production access is enabled
 identityforge naming trademarks "Candidate name" --project <uuid> --candidate <uuid> --nice-classes 9,42
 identityforge naming move <candidate-uuid> --project <uuid> --status finalist --notes "Strong market fit"
 identityforge naming rank <candidate-uuid>=1 <candidate-uuid>=2 --project <uuid>
@@ -505,11 +489,6 @@ identityforge themes update my-kit --kit kit.json --expected-updated-at "$MARKER
 
 **The marker is opaque. Echo it back byte for byte and never parse it.** It crosses the wire as a raw Postgres timestamp rather than ISO-8601, and the guard compares strings, so a client that parses it into a `Date` and serialises it back never matches and gets `409` forever. Parsing also drops the microseconds, so a comparison that normalises both sides can falsely match and let a genuinely stale write through. A curated catalog kit has no marker, because it has no row and cannot be edited.
 
-</details>
-
-<details>
-<summary><strong>Authentication, telemetry, and Docker</strong></summary>
-
 ## Authentication
 
 Commands authenticate with an Identity Forge API key (`ifk_…`). `login` stores it in `~/.identityforge/config.json` with mode `600`. You can also set it per shell:
@@ -520,7 +499,7 @@ export IDENTITYFORGE_API_URL=https://identityforge.io   # override the API base
 export IDENTITYFORGE_TELEMETRY=0                        # optional: disable apply-completion counting
 ```
 
-Free kits and naming-recipe discovery work without a key. Sign in to keep persistent projects and saved work under an authenticated quota. Owned naming projects and domain research use `naming:read`, generation and board edits use `naming:write`, reading design systems uses `kits:read`, and creating or remixing kits plus building shareable brand projects uses `kits:write`. API calls count against the plan's API quota, while generation separately spends AI credits for successfully persisted unique candidates. Manage keys at <https://identityforge.io/account/api-keys>.
+Free kits and naming-recipe discovery work without a key. Sign in to keep persistent projects and saved work under an authenticated quota. Owned naming projects and domain research use `naming:read`, generation and board edits use `naming:write`, reading design systems uses `kits:read`, and creating or remixing kits plus building shareable brand projects uses `kits:write`. API calls count against one account-wide monthly API quota shared by all keys, while generation separately spends AI credits for successfully persisted unique candidates. Manage keys at <https://identityforge.io/account/api-keys>.
 
 After a successful local apply, the client sends one metadata-only completion request so aggregate builds can be counted. It includes the kit identifier plus the client name and version already present in every API request. It never sends the repository path or file contents, never changes the apply result, and can be disabled with `IDENTITYFORGE_TELEMETRY=0`.
 
@@ -537,12 +516,10 @@ docker run -i --rm -e IDENTITYFORGE_API_KEY=ifk_… identityforge-mcp
 
 The image contains no kit payloads. The key is optional: without one, the server still starts and fetches published Free kits from the Identity Forge platform API. Pro kits, saved work, and writes require an account key.
 
-</details>
-
 ## Links
 
 - [Source and agent plugin](https://github.com/KasayoDotCom/identityforge-mcp): the public CLI and MCP implementation.
-- [Kit gallery](https://identityforge.io/kits): browse every kit with live previews, judged use-case lanes, and search.
+- [Kit gallery](https://identityforge.io/kits): browse every kit with live previews, authored-intent use-case filters, and search.
 - [For agents](https://identityforge.io/for-agents): the full agent integration story.
 - [API manifest](https://identityforge.io/api/v1) and [llms.txt](https://identityforge.io/api/v1/llms.txt).
 - [Official MCP Registry record](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.identityforge%2Fmcp) and [Glama listing with independent build and security analysis](https://glama.ai/mcp/servers/KasayoDotCom/identityforge-mcp/score).

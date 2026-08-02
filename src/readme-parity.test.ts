@@ -146,57 +146,22 @@ test("the README does not document a command that no longer exists", () => {
 	)
 })
 
-/**
- * `use` RE-ORDERS the catalog for a lane. It does not narrow it: measured across
- * all 75 kits, no kit-by-lane pair scored below the documented cut. Every wording
- * below has actually shipped saying otherwise, and each was found only after the
- * previous one was fixed, because each fix corrected the surface it was reported
- * on and left the paraphrase next door.
- *
- * That is the failure this guards. A sweep for the exact phrase from the last
- * report reads as clean while the same claim sits one synonym away, so the check
- * has to hold every form that has ever shipped rather than the current one.
- *
- * It cannot catch a NEW paraphrase. Nothing mechanical can. When a fix lands
- * here, add the wording it replaced to this list.
- */
-const NARROWING_CLAIMS: { pattern: RegExp; shipped: string }[] = [
-	{
-		pattern: /only kits[^.]{0,60}\bfit\b/i,
-		shipped: "README 0.3.3: returns only kits genuinely fit for dashboards",
-	},
-	{
-		pattern: /\bfilter\w*\b[^.]{0,40}\blane\b/i,
-		shipped: "README 0.3.3: Filter to a judged use-case lane with `use`",
-	},
-	{
-		pattern: /\bfilters and ranks\b/i,
-		shipped: "mcp.ts 0.3.3, search_themes: since it filters and ranks for you",
-	},
-	{
-		pattern: /too subtle to filter on/i,
-		shipped: "mcp.ts 0.3.3, list_themes: too subtle to filter on",
-	},
-	{
-		pattern: /trust a filter\b/i,
-		shipped: "mcp.ts 0.3.3, search_themes: than trust a filter",
-	},
-]
-
-test("no agent-facing surface claims that `use` narrows the catalog", () => {
-	const found: string[] = []
-	for (const [surface, text] of [
-		["cli/README.md", README],
-		["cli/src/mcp.ts", MCP],
+test("agent discovery describes authored eligibility for every lane", () => {
+	for (const [name, source] of [
+		["README", README],
+		["MCP", MCP],
 	] as const) {
-		for (const { pattern, shipped } of NARROWING_CLAIMS) {
-			const hit = text.match(pattern)
-			if (hit) found.push(`${surface}: "${hit[0]}" (last shipped as ${shipped})`)
-		}
+		assert.match(
+			source,
+			/authored audience[^.]{0,80}(bestFor|`bestFor`)/i,
+			`${name} must name the fields that establish use-case eligibility`,
+		)
+		assert.match(source, /tags[^.]{0,80}(never|do not)[^.]{0,40}(fit|product)/i)
+		assert.doesNotMatch(
+			source,
+			/other lanes currently rank more than they narrow/i,
+		)
+		assert.doesNotMatch(source, /narrows the e-commerce lane/i)
+		assert.doesNotMatch(source, /re-orders[^.]{0,80}does not narrow/i)
 	}
-	assert.deepEqual(
-		found,
-		[],
-		`\`use\` re-orders the catalog and never narrows it, but these say it filters:\n${found.join("\n")}`,
-	)
 })

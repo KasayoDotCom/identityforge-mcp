@@ -1,7 +1,7 @@
 import { resolveApiKey, resolveApiUrl } from "./config.js"
 import { isVersionGreater } from "./updateCheck.js"
 
-export const CLI_VERSION = "0.3.10"
+export const CLI_VERSION = "0.3.11"
 
 export type ApiClient = "cli" | "mcp"
 
@@ -78,8 +78,8 @@ export interface KitSummary {
 	saved?: number
 	installs?: number
 	popularity?: number
-	/** Judged discovery facets: use-case fitness 0-100 (lanes the kit genuinely
-	 *  fits, best first), moods, industries.
+	/** Discovery facets: authored use-case eligibility followed by measured
+	 *  fitness 0-100, plus moods and industries.
 	 *
 	 *  `fitReasons` is `{}` for every kit today and `fit.reason` is absent, so
 	 *  the score arrives without prose explaining it. Both stay in the shape
@@ -768,7 +768,7 @@ export interface KitListMeta extends EntitlementMeta {
 }
 
 /** One page of the catalog. Pass `offset` (and optional `limit`) to page.
- *  `use` re-orders for a use case (fit-ranked) but does not narrow;
+ *  `use` narrows to authored use-case fits and ranks them by measured fitness;
  *  `q` is ranked, synonym-aware discovery search. */
 export async function listKits(
 	opts: {
@@ -1822,10 +1822,10 @@ export async function getKitVersion(
  *  the current version, which is the question a consuming repo actually asks. */
 export async function diffKitVersions(
 	identifier: string,
-	range: { from?: number; to?: number } = {},
+	range: { from: number; to?: number },
 ): Promise<{ data: VersionDiff; meta: { toIsCurrent: boolean } }> {
 	const qs = new URLSearchParams()
-	if (range.from != null) qs.set("from", String(range.from))
+	qs.set("from", String(range.from))
 	if (range.to != null) qs.set("to", String(range.to))
 	const suffix = qs.toString() ? `?${qs.toString()}` : ""
 	return requestJson<{ data: VersionDiff; meta: { toIsCurrent: boolean } }>(
@@ -1926,10 +1926,10 @@ export async function getBrandProjectVersion(
 
 export async function diffBrandProjectVersions(
 	projectId: string,
-	range: { from?: number; to?: number } = {},
+	range: { from: number; to?: number },
 ): Promise<{ data: VersionDiff; meta: { toIsCurrent: boolean } }> {
 	const qs = new URLSearchParams()
-	if (range.from != null) qs.set("from", String(range.from))
+	qs.set("from", String(range.from))
 	if (range.to != null) qs.set("to", String(range.to))
 	const suffix = qs.toString() ? `?${qs.toString()}` : ""
 	return requestJson<{ data: VersionDiff; meta: { toIsCurrent: boolean } }>(
