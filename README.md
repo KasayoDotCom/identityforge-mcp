@@ -79,9 +79,9 @@ Once connected, your agent gets 61 tools grouped around real jobs:
 
 The three-minute lifecycle film follows a design system from the first choice through later updates, an older-site rebuild, and a client handoff. The Aubade storefront, Shiftly rebuild, and Kestrel rebrand are complete one-shot agent builds from real Identity Forge design systems.
 
-https://github.com/user-attachments/assets/ea90ffc2-d3c5-432a-8cd6-f2d81ca29aba
+https://github.com/user-attachments/assets/e139a54f-8b06-4ba0-830f-0a476533d166
 
-[Download the full-resolution 1080p WebM](https://github.com/KasayoDotCom/identityforge-mcp/releases/download/v0.3.10/identity-forge-lifecycle-explainer.webm).
+[Download the full-resolution 1080p WebM](https://github.com/KasayoDotCom/identityforge-mcp/releases/download/v0.3.10/identity-forge-lifecycle-explainer-v2.webm).
 
 ## Reference
 
