@@ -40,13 +40,14 @@ installing anything.
 ### Watch it work
 
 The three-minute lifecycle film follows a design system from the first choice
-through later updates, an older-site rebuild, and a client handoff. The Aubade
-storefront, Shiftly rebuild, and Kestrel rebrand are complete one-shot agent
-builds from real Identity Forge design systems.
+through product imagery, an ecommerce rebuild, a later brand update, an
+older-site rebuild, and team review. The Aubade storefront and Shiftly rebuild
+are complete one-shot agent builds from real Identity Forge design systems. The
+Commonkeep review uses synthetic showcase data in the real review experience.
 
-https://github.com/user-attachments/assets/e139a54f-8b06-4ba0-830f-0a476533d166
+https://github.com/user-attachments/assets/fc3cdba2-4876-46e5-a92a-09ce6d7071ff
 
-[Download the full-resolution 1080p WebM](https://github.com/KasayoDotCom/identityforge-mcp/releases/download/v0.3.10/identity-forge-lifecycle-explainer-v2.webm).
+[Download the full-resolution 1080p WebM](https://github.com/KasayoDotCom/identityforge-mcp/releases/download/v0.3.10/identity-forge-design-system-lifecycle.webm).
 
 ## For agents
 
