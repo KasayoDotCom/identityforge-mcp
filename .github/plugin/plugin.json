@@ -1,0 +1,21 @@
+{
+	"name": "identity-forge",
+	"description": "Complete design kits, design tokens, brand naming, and domain research through Identity Forge MCP.",
+	"version": "0.3.11",
+	"author": {
+		"name": "Kasayo",
+		"url": "https://identityforge.io"
+	},
+	"homepage": "https://identityforge.io/for-agents",
+	"repository": "https://github.com/KasayoDotCom/identityforge-mcp",
+	"license": "MIT",
+	"keywords": [
+		"design-systems",
+		"design-tokens",
+		"branding",
+		"mcp",
+		"github-copilot"
+	],
+	"skills": ["./skills/identityforge/"],
+	"mcpServers": "./.mcp.json"
+}
