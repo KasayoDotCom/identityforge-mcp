@@ -6,79 +6,193 @@
 
 <h1 align="center">Identity Forge MCP</h1>
 
-<p align="center">Design systems, brand naming, and domain research for coding agents.</p>
+<p align="center">Implementation-ready design systems that coding agents can search, compare, apply, fork, and keep up to date.</p>
 
 <p align="center">
-  <a href="#for-people">For people</a> ·
-  <a href="#for-agents">For agents</a> ·
-  <a href="#mcp-tools">MCP tools</a> ·
-  <a href="#cli-commands">CLI reference</a>
+  <a href="#start-here">Start here</a> ·
+  <a href="#what-you-can-ask">Examples</a> ·
+  <a href="#watch-it-work">Film</a> ·
+  <a href="#use-it-free-without-an-account">Free access</a> ·
+  <a href="#libraries-that-extend-a-design-system">Libraries</a> ·
+  <a href="#full-mcp-and-cli-reference">Technical reference</a>
 </p>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/identityforge"><img src="https://img.shields.io/npm/v/identityforge" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/identityforge"><img src="https://img.shields.io/npm/dw/identityforge?label=weekly%20downloads" alt="npm weekly downloads"></a>
   <a href="https://github.com/KasayoDotCom/identityforge-mcp/actions/workflows/ci.yml"><img src="https://github.com/KasayoDotCom/identityforge-mcp/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/npm/l/identityforge" alt="MIT license"></a>
 </p>
 
-## For people
+## Start here
 
-Identity Forge gives a coding agent a complete visual system before it starts
-building. Choose a design kit yourself, or let the agent rank the catalog
-against your product and the mood you want. Each kit includes typography,
-semantic color tokens, layout, motifs, dos and don'ts, and a `DESIGN.md` the
-agent can build from.
+Connect Identity Forge to your coding agent:
 
-The agent can export the kit as CSS, Tailwind v3 or v4, shadcn registry data,
-DTCG tokens, or JSON, then apply it with conflict protection. Brand naming,
-domain research, and shareable client projects live in the same workflow.
+```bash
+npx --yes identityforge@latest install --client claude-code
+```
 
-Public Free kits work without an account. [Browse the design kits](https://identityforge.io/kits)
-or [read how the agent flow works](https://identityforge.io/for-agents) before
-installing anything.
+Set `--client` to `cursor`, `codex`, `vscode`, `gemini`, `opencode`, or `pi` for
+another supported client.
 
-### Watch it work
+### What installation changes
 
-The three-minute lifecycle film follows a design system from the first choice
-through product imagery, an ecommerce rebuild, a later brand update, an
-older-site rebuild, and team review. The Aubade storefront and Shiftly rebuild
-are complete one-shot agent builds from real Identity Forge design systems. The
-Commonkeep review uses synthetic showcase data in the real review experience.
+The installer adds one `identityforge` MCP entry to the client's configuration.
+It keeps the client's existing entries and settings. It does not edit your
+application code, design files, agent instructions, conversations, saved
+memories, or knowledge sources.
+
+After that, Identity Forge is simply another set of tools your agent can call.
+It does not replace the agent's knowledge or automatically receive the rest of
+the conversation, saved memories, or knowledge sources. Identity Forge only
+sees the tool calls and arguments your agent sends.
+
+Installing it does not change your product code. Work starts only when you ask
+the agent to use Identity Forge. Your prompt sets the scope. If you ask for
+buttons and form controls, those are the components to change. Identity Forge
+does not widen the task. If you ask for a complete design-system implementation,
+the agent can work across the interface. Identity Forge supplies the system and
+its tokens; the coding agent edits the app.
+
+You can search and apply public design systems in the Free collection without
+an account or API key. A useful first request is:
+
+> Find a design system for a calm fintech dashboard. Compare three and give me a
+> short pitch for each. Then apply the one I choose.
+
+The agent searches systems written for that kind of product, reads the complete
+briefs for the strongest candidates, and brings the comparison back to you.
+Nothing is applied until you choose a direction.
+
+Applying your choice writes:
+
+- `DESIGN.md`, with typography, semantic colors, layout, motifs, component rules,
+  image guidance, and rules to avoid
+- tokens as CSS, Tailwind v3 or v4, shadcn registry data, DTCG, or JSON
+- `identityforge.json`, which records the applied system and protects local edits
+  when you update it later
+
+These are the files the agent builds from. They do not rewrite your app.
+Implementation starts when you ask the agent to make the corresponding code
+changes.
+
+## What you can ask
+
+### Choose, apply, or make a design system
+
+| Tell your agent | What happens |
+| --- | --- |
+| "Find a design system for a calm fintech dashboard. Compare three and give me a short pitch for each. Then apply the one I choose." | Three relevant systems and a short pitch for each. Once you choose, the agent applies its complete rules and tokens. |
+| "Use this system only for the buttons and form controls. Leave the layout and content alone." | Only those component types are changed. The layout and content stay as they are. |
+| "Use this system as a starting point. Fork it into a private kit, then make the typography more editorial." | Your own editable copy. The catalog system stays unchanged. |
+| "Start fresh and create a private design system for this product from the brief." | A new system with its own colors, type, tokens, facets, and implementation brief. |
+| "Has the design system changed since this site was built? Show me what moved before updating anything." | Version history and a field-level diff against the system recorded in `identityforge.json`. |
+
+### Find a name and check domains
+
+| Tell your agent | What happens |
+| --- | --- |
+| "Find twelve names for this logistics product. Check `.com` and `.de`, then shortlist the strongest three." | A persistent naming board with DNS, RDAP, registrar, and optional search evidence. Domain results remain signals until the registrar confirms a purchase. |
+
+### Review brand directions with your team
+
+| Tell your agent | What happens |
+| --- | --- |
+| "Prepare three brand directions and give my team a review link." | Saved variations and a password-protectable page where reviewers can compare directions, choose favorites, and leave comments. |
+| "Read the comments from that review and summarize the requested changes. Do not revise anything yet." | The agent reads the comments through Identity Forge and returns a revision plan for your approval. |
+| "Update the selected direction from the approved plan and keep the same review project." | The agent revises the existing direction so the team keeps the context of the original review. |
+
+Ask in your own words. The agent chooses and combines the MCP tools, pauses for
+your decisions, and shows the technical details when you ask.
+
+<p align="center">
+  <img src="./assets/brand-review-preview.png" alt="Synthetic Commonkeep brand review showing a selected name, domain signals, design direction, and website preview" width="1200">
+</p>
+
+<p align="center"><sub>A synthetic project in the real Identity Forge review experience.</sub></p>
+
+<p align="center">
+  <img src="./assets/brand-review-comment.png" alt="Review comment requesting that the chosen direction keep its editorial voice while the interface stays calm and practical" width="540">
+</p>
+
+## Watch it work
+
+The three-minute lifecycle film follows a design system through product imagery,
+an ecommerce build, a later brand update, an older-site rebuild, and team
+review. Aubade and Shiftly were built in one shot by agents using real Identity
+Forge systems. The Commonkeep review uses synthetic data in the real review
+experience.
 
 https://github.com/user-attachments/assets/fc3cdba2-4876-46e5-a92a-09ce6d7071ff
 
 [Download the full-resolution 1080p WebM](https://github.com/KasayoDotCom/identityforge-mcp/releases/download/v0.3.10/identity-forge-design-system-lifecycle.webm).
 
-## For agents
+## Use it free without an account
 
-Install the local MCP server into the client you use:
+Without signing in, you can search every catalog and read or apply public design
+systems in the Free collection. Create an account when you want Identity Forge
+to save work for you, run domain research, generate options, or host review
+links. New accounts start on the Free plan and do not begin a paid subscription.
 
-```bash
-npx --yes identityforge@latest install --client claude-code   # Claude Code
-npx --yes identityforge@latest install --client cursor        # Cursor
-npx --yes identityforge@latest install --client vscode        # VS Code / Copilot
-npx --yes identityforge@latest install --client codex         # Codex
-```
+| Capability | Without an account | Free account | Pro |
+| --- | --- | --- | --- |
+| Connect the MCP server or CLI | Yes | Yes | Yes |
+| Search every catalog | Yes | Yes | Yes |
+| Read and apply Free design systems | Yes | Yes | Yes |
+| Read and apply Pro design systems | Preview only | Preview only | Yes |
+| Save private systems and brand projects | No | Projects plus 3 saved kits | Projects plus unlimited saved kits |
+| Use naming boards and domain research | No | Yes | Yes |
+| Generate names and visual mockups | No | 20 AI credits each month | 1,000 AI credits each month |
+| Get recommendations for your product | Use-case matching | Candidates from a saved brief | AI-ranked candidates with reasons |
+| Share review links and read comments | No | Yes | Yes |
+| API allowance | Anonymous public reads | 2,000 units each month | 50,000 units each month |
 
-Also supported: `gemini`, `opencode`, `pi`. Every client runs the same local
-stdio server, and `install` merges into your existing config rather than
-replacing it. Config paths for all seven are in
-[Install into an agent](#install-into-an-agent).
-
-Public Free kits work immediately, without a key. Tell your agent:
-
-> Use Identity Forge to pick a theme that fits this product, apply it, and follow the DESIGN.md.
-
-Sign in for persistent projects, saved work, authenticated quota, or Pro access:
+Sign in when you want persistent work, domain research, generation, or review
+links:
 
 ```bash
 npx --yes identityforge@latest login
 ```
 
-No account yet? In the browser, sign up, complete the security check, select
-`Send verification email`, and open its link. Then select
-`Confirm email and continue`, approve the resumed authorization, and the CLI
-receives the key automatically.
+For a new email account, the browser asks you to complete the security check,
+select `Send verification email`, and open its link. Then select
+`Confirm email and continue` and approve the resumed authorization. The CLI
+receives the key automatically. Run `identityforge whoami` whenever you want the
+current scopes, quota, AI credits, and saved-kit allowance for that key.
+
+[See current Pro pricing](https://identityforge.io/pricing). If you find Identity
+Forge useful, [please star the repository](https://github.com/KasayoDotCom/identityforge-mcp).
+It helps other builders find it.
+
+## Libraries that extend a design system
+
+A design system is the foundation. It owns color, typography, spacing, motifs,
+component behavior, and the rules that give the product a recognizable identity.
+Three smaller libraries answer more specific implementation questions:
+
+- **Image directions** codify how product photography or illustration should be
+  presented across a site. For an existing product, keep the approved image as
+  the fixed reference and use the exported direction with a reference-preserving
+  editor such as [Nano Banana 2 or Nano Banana Pro](https://ai.google.dev/gemini-api/docs/image-generation)
+  or [GPT Image 2](https://developers.openai.com/api/docs/models/gpt-image-2).
+  Change the setting, light, supporting objects, composition, crop, and finish
+  around the same product. Do not recreate the product from a text description
+  or paste a cutout over a separately generated background.
+- **Interface styles** describe how surfaces, hierarchy, density, and depth should
+  render. They sit on top of the design system, which still owns the colors, type, and
+  brand rules.
+- **Page recipes** provide reusable communication structures: what a page should
+  lead with, how it should build trust, and where it should ask the reader to
+  decide. The design system still controls how that structure looks.
+
+These libraries are optional. Start with the design system, then add one when the
+project needs that extra layer of direction.
+
+## Full MCP and CLI reference
+
+The sections above are enough to start using Identity Forge. The rest of this
+README documents all 61 MCP tools and CLI commands, including scopes, quota
+costs, write behavior, and the exact shape of each workflow.
 
 ## Use-case discovery
 
@@ -90,7 +204,7 @@ Every use-case lane has two checks. First, the kit's authored audience or `bestF
 
 Use the lane to shortlist and the order to compare. Do not turn the score into an explanation: it ranks technical fit after authored intent, but does not say why the kit suits a particular brief.
 
-For the data lanes there is a better answer than the score. Every kit summary carries a `charts` block measured on the mode the kit ships in: `minDeltaE` and `cvdMinDeltaE` (the closest pair of series colors, plain and under colorblind simulation), `distinct`, `hueFamilies`, `severityHeadroom` (how close any series comes to the destructive, warning and success roles — 0 means a category color IS a status color), `sequentialReady`, and `designed`, which is `false` when the kit defines no chart slots and the five were cycled from its brand roles. Those are measurements, so unlike the fitness score they can be stated to a user as the reason for a recommendation.
+For the data lanes there is a better answer than the score. Every kit summary carries a `charts` block measured on the mode the kit ships in: `minDeltaE` and `cvdMinDeltaE` (the closest pair of series colors, plain and under colorblind simulation), `distinct`, `hueFamilies`, `severityHeadroom` (how close any series comes to the destructive, warning and success roles; 0 means a category color is also a status color), `sequentialReady`, and `designed`, which is `false` when the kit defines no chart slots and the five were cycled from its brand roles. These are measurements, so they can support a recommendation in a way the general fitness score cannot.
 
 Use-case lanes: `data-dashboard`, `admin-internal-tool`, `saas-marketing`, `landing-page`, `ecommerce-store`, `portfolio`, `editorial-blog`, `docs-knowledge-base`, `mobile-app`, `business-services`, `community-social`, `ai-agent-chat`.
 
@@ -190,7 +304,7 @@ identityforge apply acid-signal-black --force     # overwrites, content is lost
 ```jsonc
 {
   "stampVersion": 1,          // shape of this file, so a reader never has to guess
-  "designMdContract": "1.0",  // shape of the DESIGN.md you built against — not the kit's
+  "designMdContract": "1.0",  // shape of the DESIGN.md you built against, not the kit's
                               // revision and not this file's. Three different versions
                               // live here; flattening any two invents a baseline.
   "kit": {
@@ -210,9 +324,9 @@ identityforge apply acid-signal-black --force     # overwrites, content is lost
 
 Re-applying reads that back:
 
-- **The version moved** — the server's own count says the kit changed. Re-read the brief.
-- **Same version, different rendered file** — the `DESIGN.md` serializer changed, not the kit. No action.
-- **No version on both sides** — only the digest is available, and it cannot tell those two cases apart, so it says so rather than guessing.
+- **The version moved:** the server's own count says the kit changed. Re-read the brief.
+- **Same version, different rendered file:** the `DESIGN.md` serializer changed, not the kit. No action.
+- **No version on both sides:** only the digest is available, and it cannot tell those two cases apart, so it says so rather than guessing.
 
 Because the id is the durable handle, renaming a kit's slug is not reported as "you applied a different kit". A stamp written by a newer CLI than yours is refused rather than half-understood: every file counts as unrecorded, so the apply stops instead of overwriting on a record it cannot fully read.
 
@@ -225,9 +339,9 @@ identityforge status --dir apps/web
 
 It takes no kit and no version, because the stamp already holds both. `themes diff --from N` needs you to know the kit and read the number out of the JSON yourself; `apply --preview` needs the slug and fetches a whole write plan to answer a read-only question. `status` reads `identityforge.json`, asks the server by **id**, and reports the three movements the stamp implies, separately:
 
-- **`kitMoved`** — the server's own version count differs. The design changed.
-- **`documentMoved`** — the rendered `DESIGN.md` bytes differ. A serializer change alone does that to every kit at once, so on its own it is not a reason to touch your code.
-- **`contractMoved`** — `designMdContract` differs. The document's *shape* changed: a section added, renamed, or removed. That is a third question, and neither of the other two answers it.
+- **`kitMoved`:** the server's own version count differs. The design changed.
+- **`documentMoved`:** the rendered `DESIGN.md` bytes differ. A serializer change alone does that to every kit at once, so on its own it is not a reason to touch your code.
+- **`contractMoved`:** `designMdContract` differs. The document's *shape* changed: a section was added, renamed, or removed. That is a separate question, and neither of the other two answers it.
 
 Each is `null` rather than `false` when one side cannot answer, and a note says which side was missing. If the kit did move and both versions are numbers, the same diff `themes diff` would have printed is included. It also hashes every artifact the stamp recorded against what is on disk, so a `DESIGN.md` you have since edited by hand shows as `modified` before you re-apply over it.
 
@@ -267,30 +381,31 @@ flow.
 
 ### Compose the other axes onto a brand
 
-A brand is a design kit plus an image direction, an interface style, and any number of page recipes. Those references live on the PROJECT, not the kit, so swapping the kit leaves them alone.
+A brand is a design kit plus an image direction, an interface style, and any number of page recipes. Those references belong to the project, so swapping the kit leaves them in place.
 
 - `get_brand_layers` (`kits:read`): what a brand is composed of, with both revision numbers on every reference and `drift` present only where the record has moved since it was pinned. `meta.drifted` counts them, and `links.preview` is the composition rendered as an image. Reads nothing into the brand: no version is minted and no pin moves.
 - `add_brand_layer`: compose one record onto the brand, recording the revision it is at now so a later read can report a change rather than apply it silently. One tool for all three axes via `axis`. Image direction and interface style hold one each; a second is refused with 409 unless you pass `replace: true`, which is also how you accept a drifted revision.
 - `remove_brand_layer`: take one off. Pass `confirm: true`; it names the record rather than the axis, so a stale view cannot clear a layer it never saw, and repeating it is a no-op.
-- `export_brand` (`kits:read`): the brand as ONE document, ready to build from — the kit's `DESIGN.md` with every pinned layer written into it, under the precedence rule that decides which wins when they disagree (the kit owns identity, a layer owns application). Use it instead of merging the kit and each layer yourself. A layer the key cannot open is named with its page and an upgrade path rather than dropped; a brand with no chosen kit answers 409 instead of returning a placeholder nobody picked.
+- `export_brand` (`kits:read`): return the brand as one document, ready to build from. It combines the kit's `DESIGN.md` with every pinned layer and applies the precedence rule for disagreements: the kit owns identity and a layer owns application. Use this instead of merging the kit and layers yourself. If the key cannot open a layer, the response names it and provides its page and upgrade path. A brand with no chosen kit answers 409 rather than returning an unselected placeholder.
 
 ### Describe the product once, then get proposals grounded in it
 
-- `get_project_context` / `set_project_context`: store what the product is — what it does, who it is for, its constraints, what has been ruled out, its screens, its stack — on a brand project. Every later proposal is grounded in it, including in a session that never saw the description.
+- `get_project_context` / `set_project_context`: store the product description, audience, constraints, rejected ideas, screens, and stack on a brand project. Later proposals use this context, including in a session that never saw the original description.
 - `recommend_kits({projectId})`: candidates for that product, each carrying the kit's own evidence and its judged fitness for the surfaces the product actually has. With Pro and a `kits:write` key you also get a model ranking with a reason per candidate; `meta.depth` is `ranked` or `candidates`.
 
-Two things that surprise people:
+Two details matter here:
 
-- **`set_project_context` REPLACES.** The endpoint is `PUT`, not `PATCH`, so a field you omit is deleted rather than kept. That is deliberate — a merging update would let you drop a surface from the list and silently keep the old one — but it means you read with `get_project_context` first and send the whole object back with your edit applied.
+- **`set_project_context` replaces the stored object.** The endpoint is `PUT`, not `PATCH`, so an omitted field is deleted. Read with `get_project_context` first, apply your edit, and send the complete object back. A merging update would make it impossible to remove a field reliably.
 - **`recommend_kits` costs 3 quota units and needs a key**, where `list_themes` costs 1 and every other discovery route works anonymously. The reasoning is in the route's own docstring: it takes a free-text body rather than query parameters, and it is the one route that can grow into a metered model call. Writing a context needs `kits:write`; reading one needs only `kits:read`.
 
 ### Has it changed since I built? (read-only)
 
 - `list_kit_versions`, `get_kit_version`, `diff_kit_versions`: a kit's version timeline, one past snapshot in full, and what moved between two versions. `diff_kit_versions({slug, from})` with no upper bound compares against the current version, which is the question a repo with an `identityforge.json` actually has.
 - `list_brand_project_versions`, `get_brand_project_version`, `diff_brand_project_versions`: the same three for a brand project, owner-scoped.
-- `list_kit_history`, `get_kit_history_event`: the same kit's ledger, which is a wider record than its version timeline. `kit_history_events` carries three event types — created, saved, and applied to a brand — and only the first two mint a version, so an apply appears in the ledger and nowhere else. Ask the ledger whether a kit was ever actually used; ask the timeline what its tokens were. It pages by an opaque cursor rather than a version number, because an event has no ordinal to page below.
-**Share: pause or withdraw.** `update-share` is the reversible one and almost always the
-right one — `--disable` pauses the link, the token is untouched, and a URL already with the
+- `list_kit_history`, `get_kit_history_event`: read the kit's ledger, which covers more than its version timeline. `kit_history_events` records created, saved, and applied-to-brand events. Only creation and saving mint a version, so an apply appears in the ledger but not the timeline. Use the ledger to find out whether a kit was used, and the timeline to inspect its tokens. History uses an opaque cursor because events have no version number.
+
+**Share: pause or withdraw.** `update-share` is reversible and is usually the right
+choice. `--disable` pauses the link without changing its token, and a URL already with the
 client works again the moment you resume. `revoke-share` is permanent: the `/p/<token>` URL
 stops resolving wherever it was pasted, including in an email already sent, and sharing
 again mints a new token and deliberately never the old one. It refuses without `--yes`.
@@ -403,7 +518,7 @@ identityforge brand comments --project <uuid>
 identityforge brand projects
 # Describe the product once, then ask for grounded proposals
 identityforge brand context --project <uuid>          # read the stored context
-identityforge brand set-context --project <uuid> --file context.json   # REPLACES it
+identityforge brand set-context --project <uuid> --file context.json   # replaces the stored context
 identityforge brand recommend --project <uuid>        # candidates (3 units, needs a key)
 # Queue mockups: one AI credit per variation and scene combination
 identityforge brand mockups generate --project <uuid> --variation <uuid> --item tshirt:front
@@ -524,8 +639,6 @@ The image contains no kit payloads. The key is optional: without one, the server
 - [For agents](https://identityforge.io/for-agents): the full agent integration story.
 - [API manifest](https://identityforge.io/api/v1) and [llms.txt](https://identityforge.io/api/v1/llms.txt).
 - [Official MCP Registry record](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.identityforge%2Fmcp) and [Glama listing with independent build and security analysis](https://glama.ai/mcp/servers/KasayoDotCom/identityforge-mcp/score).
-
-If Identity Forge earns a place in your workflow, a GitHub star helps other builders find it.
 
 ## License
 
