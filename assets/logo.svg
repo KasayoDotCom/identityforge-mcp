@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="Identity Forge">
+  <style>
+    .ring{stroke:#FF532A;stroke-opacity:.16}
+    @media (prefers-color-scheme: dark){ .ring{stroke-opacity:.42} }
+  </style>
+  <rect x="1" y="1" width="46" height="46" rx="9" fill="#0A0A0A"/>
+  <rect class="ring" x="1.75" y="1.75" width="44.5" height="44.5" rx="8.25" fill="none" stroke-width="1"/>
+  <!-- I : identity, cold white slab -->
+  <rect x="10.5" y="12" width="10" height="5" fill="#FFFFFF"/>
+  <rect x="13" y="12" width="5" height="24" fill="#FFFFFF"/>
+  <rect x="10.5" y="31" width="10" height="5" fill="#FFFFFF"/>
+  <!-- F : forge, hot arms -->
+  <rect x="24.5" y="12" width="5" height="24" fill="#FFFFFF"/>
+  <rect x="24.5" y="12" width="12.5" height="5" fill="#FF532A"/>
+  <rect x="24.5" y="21.5" width="9.5" height="5" fill="#FF532A"/>
+</svg>
