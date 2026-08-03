@@ -11,6 +11,7 @@
 	"repository": "https://github.com/KasayoDotCom/identityforge-mcp",
 	"license": "MIT",
 	"keywords": ["design-systems", "design-tokens", "branding", "mcp"],
+	"logo": "assets/logo.svg",
 	"skills": "./skills/",
 	"mcpServers": "./.mcp.json"
 }
