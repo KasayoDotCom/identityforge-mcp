@@ -1,6 +1,6 @@
 # Public repository guardrails
 
-This repository and its complete Git history are public. Treat every staged file, diff, fixture, comment, and asset as publishable.
+This directory is published to a public repository whose complete Git history is durable. Treat every staged file, diff, fixture, comment, and asset as publishable.
 
 - Never commit credentials, secrets, private endpoints, customer or user data, internal-only documents, paid kit payloads, or proprietary application source.
 - Use visibly redacted examples such as `ifk_…`; never use realistic token-shaped sample values.

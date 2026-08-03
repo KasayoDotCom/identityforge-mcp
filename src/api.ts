@@ -1,11 +1,14 @@
+import { randomUUID } from "node:crypto"
+
 import { resolveApiKey, resolveApiUrl } from "./config.js"
 import { isVersionGreater } from "./updateCheck.js"
 
-export const CLI_VERSION = "0.3.11"
+export const CLI_VERSION = "0.4.0"
 
 export type ApiClient = "cli" | "mcp"
 
 let apiClient: ApiClient = "cli"
+const clientProcessReference = randomUUID()
 
 /** Select the client identity used by subsequent API requests. */
 export function setApiClient(client: ApiClient = "cli"): void {
@@ -615,6 +618,9 @@ function authHeaders(): Record<string, string> {
 	const headers: Record<string, string> = {
 		"User-Agent": `identityforge-${apiClient}/${CLI_VERSION}`,
 	}
+	if (process.env.IDENTITYFORGE_TELEMETRY !== "0") {
+		headers["X-IdentityForge-Process"] = clientProcessReference
+	}
 	const key = resolveApiKey()
 	if (key) headers.Authorization = `Bearer ${key}`
 	return headers
@@ -964,7 +970,9 @@ export async function recordApplyCompleted(identifier: string): Promise<void> {
 	if (process.env.IDENTITYFORGE_TELEMETRY === "0") return
 	try {
 		await fetch(
-			`${resolveApiUrl()}/api/v1/kits/${encodeURIComponent(identifier)}/applied`,
+			`${resolveApiUrl()}/api/v1/kits/${encodeURIComponent(
+				identifier,
+			)}/applied`,
 			{
 				method: "POST",
 				headers: authHeaders(),
@@ -974,6 +982,104 @@ export async function recordApplyCompleted(identifier: string): Promise<void> {
 	} catch {
 		// Best-effort telemetry. The kit is already safely written.
 	}
+}
+
+/** Google Fonts' own five categories, which is what the `fonts` table stores. */
+export const FONT_CATEGORIES = [
+	"sans-serif",
+	"serif",
+	"display",
+	"monospace",
+	"handwriting",
+] as const
+export type FontCategory = (typeof FONT_CATEGORIES)[number]
+
+export interface FontSummary {
+	id: string
+	name: string
+	family: string
+	category: string | null
+	designer: string | null
+	popularityRank: number | null
+	weights: number[]
+	license: string | null
+}
+
+export interface FontListMeta {
+	count: number
+	total: number
+	page: number
+	pageSize: number
+	hasMore: boolean
+	nextPage: number | null
+}
+
+export async function listFonts(
+	opts: {
+		search?: string
+		category?: string
+		page?: number
+		pageSize?: number
+	} = {},
+): Promise<{ data: FontSummary[]; meta: FontListMeta }> {
+	const qs = new URLSearchParams()
+	if (opts.search) qs.set("search", opts.search)
+	if (opts.category) qs.set("category", opts.category)
+	if (opts.page != null) qs.set("page", String(opts.page))
+	if (opts.pageSize != null) qs.set("pageSize", String(opts.pageSize))
+	const suffix = qs.toString() ? `?${qs.toString()}` : ""
+	return requestJson<{ data: FontSummary[]; meta: FontListMeta }>(
+		`/api/v1/fonts${suffix}`,
+	)
+}
+
+export interface SimilarFont
+	extends Omit<FontSummary, "weights" | "designer" | "license"> {
+	score: number
+	/** Which signals put this font on the list, in plain words. */
+	why: string
+}
+
+/** The id is a slug of the family, and the endpoint accepts either spelling. */
+export async function similarFonts(
+	identifier: string,
+	limit?: number,
+): Promise<{
+	base: string
+	data: SimilarFont[]
+	meta: { limit: number; basis: string }
+}> {
+	const suffix = limit == null ? "" : `?limit=${limit}`
+	return requestJson(
+		`/api/v1/fonts/${encodeURIComponent(identifier)}/similar${suffix}`,
+	)
+}
+
+export interface CuratedPairing {
+	heading: string
+	body: string
+	mono?: string
+	label?: string
+}
+
+export interface PairingsForFamily {
+	family: string
+	curated: CuratedPairing[]
+	suggested: { heading: string; body: string; why: string }[]
+}
+
+export async function fontPairings(opts: {
+	family?: string
+	role?: "heading" | "body"
+}): Promise<{
+	data: CuratedPairing[] | PairingsForFamily
+	meta: Record<string, unknown>
+}> {
+	const qs = new URLSearchParams()
+	if (opts.family) qs.set("family", opts.family)
+	if (opts.role) qs.set("role", opts.role)
+	const suffix = qs.toString() ? `?${qs.toString()}` : ""
+	return requestJson(`/api/v1/font-pairings${suffix}`)
 }
 
 export async function listImageDirections(

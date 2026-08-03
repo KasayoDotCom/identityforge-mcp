@@ -2,13 +2,15 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { CLI_VERSION, getKit, setApiClient } from "./api.js"
 
-async function captureUserAgent(run: () => Promise<void>): Promise<string> {
+async function captureHeaders(
+	run: () => Promise<void>,
+): Promise<Array<Record<string, string>>> {
 	const originalFetch = globalThis.fetch
 	const originalApiUrl = process.env.IDENTITYFORGE_API_URL
-	let userAgent = ""
+	const headers: Array<Record<string, string>> = []
 	process.env.IDENTITYFORGE_API_URL = "http://api.test"
 	globalThis.fetch = async (_input, init) => {
-		userAgent = (init?.headers as Record<string, string>)["User-Agent"]
+		headers.push({ ...(init?.headers as Record<string, string>) })
 		return new Response(JSON.stringify({ data: {}, links: {} }))
 	}
 	try {
@@ -20,7 +22,7 @@ async function captureUserAgent(run: () => Promise<void>): Promise<string> {
 			Reflect.deleteProperty(process.env, "IDENTITYFORGE_API_URL")
 		else process.env.IDENTITYFORGE_API_URL = originalApiUrl
 	}
-	return userAgent
+	return headers
 }
 
 // Assert the SHAPE against CLI_VERSION, not a literal version. These once
@@ -29,16 +31,42 @@ async function captureUserAgent(run: () => Promise<void>): Promise<string> {
 // matters here is that the client prefix is right and a version is present;
 // that the version is the correct one is version.test.ts's job.
 test("API requests default to the CLI identity", async () => {
-	const userAgent = await captureUserAgent(() => getKit("test"))
-	assert.equal(userAgent, `identityforge-cli/${CLI_VERSION}`)
+	const [headers] = await captureHeaders(() => getKit("test"))
+	assert.equal(headers?.["User-Agent"], `identityforge-cli/${CLI_VERSION}`)
 })
 
 test("the caller can declare the MCP identity", async () => {
-	const userAgent = await captureUserAgent(async () => {
+	const [headers] = await captureHeaders(async () => {
 		setApiClient("mcp")
 		await getKit("test")
 	})
-	assert.equal(userAgent, `identityforge-mcp/${CLI_VERSION}`)
+	assert.equal(headers?.["User-Agent"], `identityforge-mcp/${CLI_VERSION}`)
+})
+
+test("first-party requests share one random process reference", async () => {
+	const headers = await captureHeaders(async () => {
+		await getKit("first")
+		await getKit("second")
+	})
+	const references = headers.map((item) => item["X-IdentityForge-Process"])
+	assert.match(
+		references[0] ?? "",
+		/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+	)
+	assert.equal(references[1], references[0])
+})
+
+test("process telemetry has a visible environment opt-out", async () => {
+	const previous = process.env.IDENTITYFORGE_TELEMETRY
+	process.env.IDENTITYFORGE_TELEMETRY = "0"
+	try {
+		const [headers] = await captureHeaders(() => getKit("test"))
+		assert.equal(headers?.["X-IdentityForge-Process"], undefined)
+	} finally {
+		if (previous === undefined)
+			Reflect.deleteProperty(process.env, "IDENTITYFORGE_TELEMETRY")
+		else process.env.IDENTITYFORGE_TELEMETRY = previous
+	}
 })
 
 test("a newer server minimum CLI is warned once without failing requests", async () => {

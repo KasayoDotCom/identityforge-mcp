@@ -13,6 +13,8 @@ import {
 	type CollectionTier,
 	EXPORT_FORMATS,
 	type ExportFormat,
+	FONT_CATEGORIES,
+	type FontCategory,
 	IMAGE_DIRECTION_FAMILIES,
 	IMAGE_DIRECTION_PURPOSES,
 	INTERFACE_STYLE_FAMILIES,
@@ -41,6 +43,7 @@ import {
 	diffKitVersions,
 	exportBrandProject,
 	exportKit,
+	fontPairings,
 	generateNamingCandidates,
 	generateMockups,
 	getBrandLayers,
@@ -60,6 +63,7 @@ import {
 	listBrandProjectComments,
 	listBrandProjectVersions,
 	listBrandProjects,
+	listFonts,
 	listImageDirections,
 	listInterfaceStyles,
 	listKitHistory,
@@ -82,6 +86,7 @@ import {
 	searchNameEvidence,
 	searchTrademarks,
 	shareBrandProject,
+	similarFonts,
 	similarKits,
 	updateBrandShare,
 	updateBrandVariation,
@@ -438,7 +443,10 @@ themes
 
 themes
 	.command("delete")
-	.argument("<id-or-slug>", "Permanent kit id, or the slug, of a kit you saved.")
+	.argument(
+		"<id-or-slug>",
+		"Permanent kit id, or the slug, of a kit you saved.",
+	)
 	.description(
 		"Permanently delete one of your saved kits. A kit still referenced by a brand project is refused; retire or repoint those references first. Requires --yes because this cannot be undone.",
 	)
@@ -949,6 +957,89 @@ interfaceStyles
 		}
 	})
 
+const fontsCommand = program
+	.command("fonts")
+	.description(
+		"Search the Google Fonts catalog, find faces that resemble one you have, and read pairings.",
+	)
+
+fontsCommand
+	.command("search")
+	.argument("[query]", "Match on font name, e.g. grotesk.")
+	.description("Search fonts by name or category. Metadata only, no files.")
+	.option("--category <category>", `One of: ${FONT_CATEGORIES.join(", ")}.`)
+	.option("--limit <n>", "How many to return. Default 12.")
+	.option("--page <n>", "Page index, 0-based. Default 0.")
+	.action(
+		async (
+			query: string | undefined,
+			opts: { category?: string; limit?: string; page?: string },
+		) => {
+			try {
+				jsonOutput(
+					await listFonts({
+						search: query,
+						category: opts.category
+							? (oneOf(
+									opts.category,
+									FONT_CATEGORIES,
+									"font category",
+								) as FontCategory)
+							: undefined,
+						pageSize:
+							opts.limit == null ? 12 : intOption(opts.limit, "--limit"),
+						page:
+							opts.page == null ? undefined : intOption(opts.page, "--page"),
+					}),
+				)
+			} catch (err) {
+				fail(err)
+			}
+		},
+	)
+
+fontsCommand
+	.command("similar")
+	.argument("<family>", "A font family or its id, e.g. Inter or open-sans.")
+	.description(
+		"Fonts that resemble one you already have, ranked by category, popularity, shared pairing partners and co-usage in kits. No letterform analysis, so confirm the look yourself.",
+	)
+	.option("--limit <n>", "How many neighbours. Default 12.")
+	.action(async (family: string, opts: { limit?: string }) => {
+		try {
+			jsonOutput(
+				await similarFonts(
+					family,
+					opts.limit == null ? undefined : intOption(opts.limit, "--limit"),
+				),
+			)
+		} catch (err) {
+			fail(err)
+		}
+	})
+
+fontsCommand
+	.command("pairings")
+	.argument("[family]", "A family to pair. Omit for the whole curated table.")
+	.description("Curated heading/body/mono pairings, plus contrast suggestions.")
+	.option("--role <role>", "Which slot the family occupies: heading or body.")
+	.action(async (family: string | undefined, opts: { role?: string }) => {
+		try {
+			jsonOutput(
+				await fontPairings({
+					family,
+					role: opts.role
+						? (oneOf(opts.role, ["heading", "body"], "pairing role") as
+								| "heading"
+								| "body")
+						: undefined,
+				}),
+			)
+		} catch (err) {
+			fail(err)
+		}
+	})
+
 program
 	.command("apply")
 	.argument("<slug>", "Theme slug to apply.")
@@ -1413,7 +1504,10 @@ brand
 		"Show what changed between two versions of a brand project. Pass --from alone to compare against the current version. Owner-scoped, so nothing is withheld.",
 	)
 	.requiredOption("--project <uuid>", "Brand project id.")
-	.requiredOption("--from <n>", "Lower bound. Use 0 for the first recorded state.")
+	.requiredOption(
+		"--from <n>",
+		"Lower bound. Use 0 for the first recorded state.",
+	)
 	.option(
 		"--to <n>",
 		"Upper bound. Omit to compare against the current version.",

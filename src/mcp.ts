@@ -9,6 +9,7 @@ import {
 	COLLECTION_SORTS,
 	COLLECTION_TIERS,
 	type EntitlementMeta,
+	FONT_CATEGORIES,
 	IMAGE_DIRECTION_FAMILIES,
 	IMAGE_DIRECTION_PURPOSES,
 	INTERFACE_STYLE_FAMILIES,
@@ -31,6 +32,7 @@ import {
 	diffKitVersions,
 	exportBrandProject,
 	exportKit,
+	fontPairings,
 	generateMockups,
 	generateNamingCandidates,
 	getBrandLayers,
@@ -48,6 +50,7 @@ import {
 	listBrandProjectComments,
 	listBrandProjectVersions,
 	listBrandProjects,
+	listFonts,
 	listImageDirections,
 	listInterfaceStyles,
 	listKitHistory,
@@ -72,6 +75,7 @@ import {
 	searchTrademarks,
 	setApiClient,
 	shareBrandProject,
+	similarFonts,
 	similarKits,
 	updateBrandShare,
 	updateBrandVariation,
@@ -146,7 +150,7 @@ The primary flow, when the user wants a look and feel for a project:
 
 1. Gather intent. Establish what the product is, who it is for, and the mood it should have, asking if any of that is unclear. For example "fintech dashboard for SMBs, calm and trustworthy" or "techno festival landing page, dark and neon".
 2. Get candidates. If the work belongs to a brand project, describe the product ONCE with set_project_context and then call recommend_kits({projectId}): candidates come back grounded in that stored description, each carrying the kit's own evidence and its computed fitness for the surfaces the product actually has, and every later session gets the same grounding without you re-sending prose. get_project_context reads it back, and reading it first is how you edit safely, because set_project_context REPLACES the whole object rather than merging it. recommend_kits costs 3 quota units and needs a key, unlike the rest of discovery. Without a project, there are two direct paths. Use list_themes when the brief maps onto a use case or a search phrase: list_themes({use: "data-dashboard"}) keeps kits whose authored audience or bestFor names that use, then ranks them by a fitness score measured on their own tokens. list_themes({q: "calm fintech dashboard"}) runs a synonym-aware ranked search. Use search_themes when the brief is subtle or cuts across categories: it returns every published kit as a compact summary with no ranking, so you weigh them yourself. If the user already has brand colors, match_palette ranks kits by perceptual color distance.
-3. Review. Each summary carries name, summary, moodSummary, vibeTags, tags, audience, a font and color glimpse, and tier. Judge fit from the character of the kit rather than term overlap. Pick one, or put two or three to the user. similar_themes(slug) finds neighbours of a candidate. Call get_design_md(slug) to read the full brief before committing.
+3. Review. Each summary carries name, summary, moodSummary, vibeTags, tags, audience, a font and color glimpse, and tier. Judge fit from the character of the kit rather than term overlap. Pick one, or put two or three to the user. similar_themes(slug) finds neighbours of a candidate. Call get_design_md(slug) to read the full brief before committing. A kit already names its heading, body and mono faces, so typography is decided by choosing a kit. Reach for the font tools only when it is not: search_fonts browses the Google Fonts catalog by name or category and, with its \`like\` argument, finds faces that resemble one the user already has — that is the way to answer "something a bit more like this". suggest_font_pairings returns the curated heading/body/mono table, or what goes beside a family the user is committed to. Both are metadata: no files, no CSS, and no letterform analysis behind \`like\`, so confirm the look before promising it.
 4. Apply. Call apply_theme(slug) with a tokensFormat that matches the stack: tailwind-v4, tailwind-v3, css, shadcn-registry, or dtcg. It writes DESIGN.md, the tokens file, and identityforge.json, a stamp holding the applied kit's id and version and a hash of every file it wrote. apply_theme is not destructive by default: it compares what is on disk against that stamp, and if a file it would overwrite is missing from the stamp or was edited since it was written, it writes nothing at all and returns the conflicting paths. Pass preview: true first when the project might already have a DESIGN.md, show the user the plan, and pass force: true only once they have agreed to lose the content of the named files, which is unrecoverable. Never force by reflex to clear a refusal.
 5. Decide the questions the kit does not answer, when the build needs them. list_page_recipes then get_page_recipe when you are building a page that has to argue a case, so the structure comes from a judged communication pattern rather than a guess. list_image_directions then get_image_direction before generating or sourcing any imagery, so the images belong to the same system as the tokens. If the user supplied a reference subject, use its approved image as fixed input, shape a few project-specific presentation routes around it, and ask the user to choose. Apply the selected route with a reference-preserving image editor and compare every result with the source at full resolution. If the current agent cannot perform reference-led editing, save or hand off the source image plus the exported direction instead of substituting text-to-image generation. Identity Forge supplies the direction and brief; it does not render those images. list_interface_styles then get_interface_style when the surface grammar matters, for example a dense tool or a tactile marketing page. Each of the three is optional and independent, all six take the same q, use, tier and sort filters as the kit tools, and each get returns Markdown by default or JSON on request. Apply all of them through the kit; none of them overrides it.
 6. Implement. Follow DESIGN.md and wire the tokens into the styling layer, whether that is CSS variables, a Tailwind @theme block, or shadcn. Carry the palette, typography, and surface rules through consistently rather than applying them to one component. Read tokens from that one place and hardcode nothing, because the stamp lets a later apply move the project onto a changed kit only if the kit is wired in once.
@@ -653,6 +657,153 @@ export function buildMcpServer(): McpServer {
 					)}\n\nNext: get_design_md(id or slug) to read a brief, or apply_theme(id or slug) to apply.\n\nJSON:\n${JSON.stringify(
 						matches,
 					)}`,
+				)
+			} catch (err) {
+				return errorResult(err)
+			}
+		},
+	)
+
+	server.registerTool(
+		"search_fonts",
+		{
+			title: "Search fonts",
+			description:
+				"Search the Google Fonts catalog by name or category, or ask for fonts that resemble one you already have. `like` is the way to find a font by resemblance: pass a family you know and get back neighbours ranked by category, popularity, the partners they share in the curated pairing table, and whether published kits use them together, each with a `why` naming the signals that placed it. Nothing here reads a letterform, so `like` is a shortlist to confirm visually, not a verdict on how a face looks. Results are compact metadata — name, family, category, designer, popularity rank, available weights, license — and carry no font files, no CSS and no specimen. Fonts do not stand alone: use suggest_font_pairings for what to set beside one, and remember a design kit already ships a chosen heading, body and mono. Read-only and free, no key needed.",
+			inputSchema: {
+				query: z
+					.string()
+					.optional()
+					.describe("Match on font name, e.g. 'grotesk' or 'Playfair'."),
+				category: z
+					.enum(FONT_CATEGORIES)
+					.optional()
+					.describe("Narrow to one Google Fonts category."),
+				like: z
+					.string()
+					.optional()
+					.describe(
+						"A font family you already have, e.g. 'Inter'. Returns fonts that resemble it instead of running a name search; `query` and `category` are ignored when this is set.",
+					),
+				limit: z
+					.number()
+					.int()
+					.min(1)
+					.max(50)
+					.optional()
+					.describe("How many to return, 1-50, default 12."),
+			},
+		},
+		async ({ query, category, like, limit }) => {
+			try {
+				if (like) {
+					const { data } = await similarFonts(like, limit ?? 12)
+					if (data.length === 0) {
+						return textResult(
+							`No fonts in the catalog resemble "${like}" on category, popularity, pairing partners, or kit co-usage. Check the spelling of the family name, or search by name with query instead.`,
+						)
+					}
+					const lines = data.map((f) => `- ${f.family} (${f.score}): ${f.why}`)
+					return textResult(
+						`Fonts like "${like}", ranked by category, popularity proximity, shared pairing partners, and co-usage in published kits. No letterform analysis, so confirm the look yourself:\n${lines.join(
+							"\n",
+						)}\n\nNext: suggest_font_pairings(family) for what to set beside one.\n\nJSON:\n${JSON.stringify(
+							data,
+						)}`,
+					)
+				}
+				const { data, meta } = await listFonts({
+					search: query,
+					category,
+					pageSize: limit ?? 12,
+				})
+				if (data.length === 0) {
+					return textResult(
+						`No fonts matched${query ? ` "${query}"` : ""}${
+							category ? ` in ${category}` : ""
+						}.`,
+					)
+				}
+				const lines = data.map(
+					(f) =>
+						`- ${f.family} (${f.category ?? "uncategorized"}, rank ${
+							f.popularityRank ?? "?"
+						}): weights ${f.weights.join("/") || "unknown"}`,
+				)
+				const more = meta.hasMore
+					? `\n\nMore: ${
+							meta.total - data.length
+						} others match; raise limit or narrow the query.`
+					: ""
+				return textResult(
+					`${data.length} of ${
+						meta.total
+					} fonts (metadata only, no files):\n${lines.join(
+						"\n",
+					)}${more}\n\nNext: search_fonts({like: <family>}) for resemblance, or suggest_font_pairings(family).\n\nJSON:\n${JSON.stringify(
+						data,
+					)}`,
+				)
+			} catch (err) {
+				return errorResult(err)
+			}
+		},
+	)
+
+	server.registerTool(
+		"suggest_font_pairings",
+		{
+			title: "Suggest font pairings",
+			description:
+				"Heading, body and mono faces that work together. Called with no arguments it returns the curated table, each entry carrying the label a person would recognise it by, such as 'Modern tech' or 'Quiet luxury'. Called with a family it answers what goes beside that one: the curated entries naming it, then category-contrast suggestions for the cases the table does not cover. `role` says which slot the family occupies; omit it and both are searched. The suggestions are contrast rules and are not ranked by quality, so read them as candidates. A design kit already carries a chosen trio, so reach for this when composing typography outside a kit or when a user has one fixed face. Read-only and free, no key needed.",
+			inputSchema: {
+				family: z
+					.string()
+					.optional()
+					.describe(
+						"A font family the user is committed to, e.g. 'Fraunces'. Omit for the whole curated table.",
+					),
+				role: z
+					.enum(["heading", "body"])
+					.optional()
+					.describe("Which slot `family` occupies. Ignored without a family."),
+			},
+		},
+		async ({ family, role }) => {
+			try {
+				const { data } = await fontPairings({ family, role })
+				if (Array.isArray(data)) {
+					const lines = data.map(
+						(p) =>
+							`- ${p.label ?? "Pairing"}: ${p.heading} / ${p.body}${
+								p.mono ? ` / ${p.mono}` : ""
+							}`,
+					)
+					return textResult(
+						`${
+							data.length
+						} curated pairings (heading / body / mono):\n${lines.join(
+							"\n",
+						)}\n\nJSON:\n${JSON.stringify(data)}`,
+					)
+				}
+				const curated = data.curated.map(
+					(p) =>
+						`- curated${p.label ? ` (${p.label})` : ""}: ${p.heading} / ${
+							p.body
+						}${p.mono ? ` / ${p.mono}` : ""}`,
+				)
+				const suggested = data.suggested.map(
+					(p) => `- suggested: ${p.heading} / ${p.body} — ${p.why}`,
+				)
+				return textResult(
+					`Pairings for ${data.family}${
+						curated.length
+							? ""
+							: " (nothing curated names it, so these are contrast rules only)"
+					}:\n${[...curated, ...suggested].join(
+						"\n",
+					)}\n\nJSON:\n${JSON.stringify(data)}`,
 				)
 			} catch (err) {
 				return errorResult(err)
