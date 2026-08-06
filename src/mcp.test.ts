@@ -172,7 +172,10 @@ test("mockup spend and the EUIPO production gate need no confirmation field", as
 			)
 		}
 		assert.match(byName.get("generate_mockups")?.description ?? "", /AI credit/)
-		assert.match(byName.get("search_trademarks")?.description ?? "", /coming soon/i)
+		assert.match(
+			byName.get("search_trademarks")?.description ?? "",
+			/coming soon/i,
+		)
 		assert.match(
 			byName.get("search_trademarks")?.description ?? "",
 			/without calling the provider/,
@@ -926,4 +929,52 @@ test("a Pro refusal's links are openable too", async () => {
 	} finally {
 		restore()
 	}
+})
+
+// The whole point of this one is that nobody was asked. An MCP host names itself
+// in the initialize handshake, so a tool call can be attributed to a product
+// without a header ask, a prompt, or anything an agent had to decide to do.
+//
+// Asserted over a real handshake rather than against the setter, because the
+// failure mode here is silence: if the name is read at the wrong moment, or the
+// source is never registered, every unit test on the normalizer still passes
+// while the header is absent from every request for the whole session.
+test("a tool call carries the MCP host's own name to the API", async () => {
+	const originalFetch = globalThis.fetch
+	const originalApiUrl = process.env.IDENTITYFORGE_API_URL
+	const originalKey = process.env.IDENTITYFORGE_API_KEY
+	const sent: Array<Record<string, string>> = []
+	process.env.IDENTITYFORGE_API_URL = "http://api.test"
+	process.env.IDENTITYFORGE_API_KEY = "ifk_test"
+	globalThis.fetch = async (_input, init) => {
+		sent.push({ ...(init?.headers as Record<string, string>) })
+		return new Response(JSON.stringify({ data: [], links: {} }), {
+			headers: { "content-type": "application/json" },
+		})
+	}
+	const [clientTransport, serverTransport] =
+		InMemoryTransport.createLinkedPair()
+	// A real client name from the wild, and deliberately one that needs
+	// normalizing: the API would reject the spaces verbatim.
+	const client = new Client({ name: "Visual Studio Code", version: "1.0.0" })
+	const server = buildMcpServer()
+	await Promise.all([
+		client.connect(clientTransport),
+		server.connect(serverTransport),
+	])
+	try {
+		await callText(client, "list_themes", {})
+	} finally {
+		await client.close()
+		await server.close()
+		globalThis.fetch = originalFetch
+		if (originalApiUrl === undefined)
+			Reflect.deleteProperty(process.env, "IDENTITYFORGE_API_URL")
+		else process.env.IDENTITYFORGE_API_URL = originalApiUrl
+		if (originalKey === undefined)
+			Reflect.deleteProperty(process.env, "IDENTITYFORGE_API_KEY")
+		else process.env.IDENTITYFORGE_API_KEY = originalKey
+	}
+	assert.ok(sent.length > 0, "the tool call must have reached the API")
+	assert.equal(sent[0]?.["X-Agent-Client"], "visual-studio-code")
 })

@@ -1,6 +1,11 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { CLI_VERSION, getKit, setApiClient } from "./api.js"
+import {
+	CLI_VERSION,
+	getKit,
+	setApiClient,
+	setDeclaredAgentSource,
+} from "./api.js"
 
 async function captureHeaders(
 	run: () => Promise<void>,
@@ -18,6 +23,7 @@ async function captureHeaders(
 	} finally {
 		globalThis.fetch = originalFetch
 		setApiClient()
+		setDeclaredAgentSource(null)
 		if (originalApiUrl === undefined)
 			Reflect.deleteProperty(process.env, "IDENTITYFORGE_API_URL")
 		else process.env.IDENTITYFORGE_API_URL = originalApiUrl
@@ -43,6 +49,35 @@ test("the caller can declare the MCP identity", async () => {
 	assert.equal(headers?.["User-Agent"], `identityforge-mcp/${CLI_VERSION}`)
 })
 
+// MCP clients name themselves in the initialize handshake, with no convention
+// between them: kebab-case, PascalCase, spaces and package names all ship today.
+// The API only records `^[a-z][a-z0-9][a-z0-9._-]{0,38}$`, so anything that will
+// not survive that has to be dropped here rather than sent and silently ignored.
+test("an MCP client name is normalized into the declared-agent header", async () => {
+	for (const [reported, expected] of [
+		["claude-code", "claude-code"],
+		["Visual Studio Code", "visual-studio-code"],
+		["Codex", "codex"],
+		["com.raycast.macos", "com.raycast.macos"],
+	] as const) {
+		const [headers] = await captureHeaders(async () => {
+			setDeclaredAgentSource(() => reported)
+			await getKit("test")
+		})
+		assert.equal(headers?.["X-Agent-Client"], expected)
+	}
+})
+
+test("an unusable MCP client name is dropped, not sent", async () => {
+	for (const reported of [undefined, "", "  ", "1password", "***", "x"]) {
+		const [headers] = await captureHeaders(async () => {
+			setDeclaredAgentSource(() => reported)
+			await getKit("test")
+		})
+		assert.equal(headers?.["X-Agent-Client"], undefined)
+	}
+})
+
 test("first-party requests share one random process reference", async () => {
 	const headers = await captureHeaders(async () => {
 		await getKit("first")
@@ -60,8 +95,12 @@ test("process telemetry has a visible environment opt-out", async () => {
 	const previous = process.env.IDENTITYFORGE_TELEMETRY
 	process.env.IDENTITYFORGE_TELEMETRY = "0"
 	try {
-		const [headers] = await captureHeaders(() => getKit("test"))
+		const [headers] = await captureHeaders(async () => {
+			setDeclaredAgentSource(() => "claude-code")
+			await getKit("test")
+		})
 		assert.equal(headers?.["X-IdentityForge-Process"], undefined)
+		assert.equal(headers?.["X-Agent-Client"], undefined)
 	} finally {
 		if (previous === undefined)
 			Reflect.deleteProperty(process.env, "IDENTITYFORGE_TELEMETRY")

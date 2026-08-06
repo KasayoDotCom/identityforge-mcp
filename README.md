@@ -44,7 +44,7 @@ through later updates, an older-site rebuild, and a client handoff.
 
 https://github.com/user-attachments/assets/b5125f58-6918-4355-b849-6863a4345a21
 
-[Download the full-resolution 1080p WebM](https://github.com/KasayoDotCom/identityforge-mcp/releases/download/v0.3.9/identity-forge-lifecycle-explainer.webm).
+[Download the full-resolution 1080p WebM](https://github.com/KasayoDotCom/identityforge-mcp/releases/download/v0.4.0/identity-forge-lifecycle-explainer.webm).
 
 ## For agents
 
@@ -168,10 +168,12 @@ A kit already names its heading, body, and mono faces. These two answer the case
 
 Identity Forge requests carry one random reference that lasts only for the
 current CLI or MCP process. A successful local apply also sends one bodyless
-completion signal. Neither includes paths, prompts, file contents, repository
-names, or a persistent installation identifier. Set
-`IDENTITYFORGE_TELEMETRY=0` to omit both the process reference and local apply
-signal; ordinary API requests still appear in server access logs.
+completion signal. Running as an MCP server, requests also carry the client name
+your editor or agent already sends in the MCP handshake (`claude-code`,
+`cursor-vscode`, `codex`), so usage can be attributed to a product rather than to
+nothing. None of this includes paths, prompts, file contents, repository names,
+or a persistent installation identifier. Set `IDENTITYFORGE_TELEMETRY=0` to omit
+all three; ordinary API requests still appear in server access logs.
 
 | File | What it is |
 | --- | --- |

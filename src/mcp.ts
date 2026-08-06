@@ -74,6 +74,7 @@ import {
 	searchNameEvidence,
 	searchTrademarks,
 	setApiClient,
+	setDeclaredAgentSource,
 	shareBrandProject,
 	similarFonts,
 	similarKits,
@@ -192,6 +193,9 @@ export function buildMcpServer(): McpServer {
 		},
 		{ instructions: WORKFLOW_INSTRUCTIONS },
 	)
+	// The host names itself in the initialize handshake, so which product is
+	// driving these tool calls arrives without anyone being asked for it.
+	setDeclaredAgentSource(() => server.server.getClientVersion()?.name)
 
 	server.registerTool(
 		"list_themes",

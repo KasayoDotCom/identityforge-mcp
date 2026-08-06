@@ -3,16 +3,53 @@ import { randomUUID } from "node:crypto"
 import { resolveApiKey, resolveApiUrl } from "./config.js"
 import { isVersionGreater } from "./updateCheck.js"
 
-export const CLI_VERSION = "0.4.0"
+export const CLI_VERSION = "0.4.1"
 
 export type ApiClient = "cli" | "mcp"
 
 let apiClient: ApiClient = "cli"
 const clientProcessReference = randomUUID()
+let readDeclaredAgent: (() => string | undefined) | null = null
 
 /** Select the client identity used by subsequent API requests. */
 export function setApiClient(client: ApiClient = "cli"): void {
 	apiClient = client
+}
+
+/**
+ * Register how to find out which product is driving this process, so API
+ * requests can say so.
+ *
+ * MCP clients send an `Implementation` in the initialize handshake, so when we
+ * run as an MCP server the name arrives unasked: `claude-code`, `cursor-vscode`,
+ * `Codex`, `gemini-cli-mcp-client`.
+ *
+ * This takes a function rather than a value on purpose. The name is only
+ * readable once the handshake has completed, and the obvious push — set it from
+ * the `initialized` notification — silently sends nothing for the whole session
+ * if a client never sends that notification. Reading per request has no such
+ * timing to get wrong: a request can only happen after the handshake.
+ */
+export function setDeclaredAgentSource(
+	read: (() => string | undefined) | null,
+): void {
+	readDeclaredAgent = read
+}
+
+/**
+ * There is no naming convention across MCP clients — kebab-case, PascalCase,
+ * space-separated and package names all ship today — and the API only records
+ * `^[a-z][a-z0-9][a-z0-9._-]{0,38}$`. Anything that will not survive that is
+ * dropped here rather than sent and silently ignored at the other end.
+ */
+function declaredAgentToken(): string | null {
+	const token = (readDeclaredAgent?.() ?? "")
+		.trim()
+		.toLowerCase()
+		.replace(/[^a-z0-9._-]+/g, "-")
+		.replace(/^-+|-+$/g, "")
+		.slice(0, 40)
+	return /^[a-z][a-z0-9][a-z0-9._-]*$/.test(token) ? token : null
 }
 
 export const EXPORT_FORMATS = [
@@ -620,6 +657,8 @@ function authHeaders(): Record<string, string> {
 	}
 	if (process.env.IDENTITYFORGE_TELEMETRY !== "0") {
 		headers["X-IdentityForge-Process"] = clientProcessReference
+		const agent = declaredAgentToken()
+		if (agent) headers["X-Agent-Client"] = agent
 	}
 	const key = resolveApiKey()
 	if (key) headers.Authorization = `Bearer ${key}`
