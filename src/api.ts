@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto"
 import { resolveApiKey, resolveApiUrl } from "./config.js"
 import { isVersionGreater } from "./updateCheck.js"
 
-export const CLI_VERSION = "0.4.1"
+export const CLI_VERSION = "0.4.2"
 
 export type ApiClient = "cli" | "mcp"
 
