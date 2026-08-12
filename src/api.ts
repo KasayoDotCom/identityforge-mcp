@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto"
 import { resolveApiKey, resolveApiUrl } from "./config.js"
 import { isVersionGreater } from "./updateCheck.js"
 
-export const CLI_VERSION = "0.4.2"
+export const CLI_VERSION = "0.4.3"
 
 export type ApiClient = "cli" | "mcp"
 
@@ -1000,26 +1000,61 @@ export async function exportKit(
 	}
 }
 
+export type ImplementationOutcome =
+	| {
+			outcome: "files_written"
+			tokensFormat:
+				| "dtcg"
+				| "css"
+				| "tailwind-v3"
+				| "tailwind-v4"
+				| "shadcn-registry"
+			artifactCount: number
+			unchangedCount: number
+			overwrittenCount: number
+	  }
+	| {
+			outcome: "artifacts_current"
+			tokensFormat:
+				| "dtcg"
+				| "css"
+				| "tailwind-v3"
+				| "tailwind-v4"
+				| "shadcn-registry"
+			artifactCount: number
+	  }
+	| { outcome: "refused"; reason: "conflict"; conflictCount: number }
+	| {
+			outcome: "failed"
+			stage: "fetch" | "plan" | "write"
+			reason: "network" | "api" | "invalid_artifact" | "filesystem" | "unknown"
+			artifactCount: number
+	  }
+
 /**
- * Record one completed local apply without sending paths or file contents.
- * This is deliberately best-effort: analytics must never make a successful
- * filesystem write look like a failed apply.
+ * Record the bounded local result without sending paths, filenames, file
+ * contents, or exception prose. Analytics remains best-effort and cannot
+ * change the command's result.
  */
-export async function recordApplyCompleted(identifier: string): Promise<void> {
+export async function recordImplementationOutcome(
+	identifier: string,
+	outcome: ImplementationOutcome,
+): Promise<void> {
 	if (process.env.IDENTITYFORGE_TELEMETRY === "0") return
 	try {
 		await fetch(
 			`${resolveApiUrl()}/api/v1/kits/${encodeURIComponent(
 				identifier,
-			)}/applied`,
+			)}/implementation-outcome`,
 			{
 				method: "POST",
-				headers: authHeaders(),
+				headers: { ...authHeaders(), "Content-Type": "application/json" },
+				body: JSON.stringify(outcome),
 				signal: AbortSignal.timeout(1_000),
 			},
 		)
 	} catch {
-		// Best-effort telemetry. The kit is already safely written.
+		// Best-effort telemetry. The command result is already known locally.
 	}
 }
 

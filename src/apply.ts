@@ -2,9 +2,10 @@ import { createHash } from "node:crypto"
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import { isAbsolute, join, relative, resolve, sep } from "node:path"
 import {
+	ApiError,
 	exportKit,
 	isSafeExportFilename,
-	recordApplyCompleted,
+	recordImplementationOutcome,
 } from "./api.js"
 
 // Applying a kit writes into someone else's repository, so it is the one place
@@ -484,106 +485,151 @@ export async function applyTheme(
 	const { stamp: priorStamp, note: stampNote } = readStamp(stampPath)
 	if (stampNote) notes.push(stampNote)
 
-	// Both fetches complete before the first write, so a 403 or a network
-	// failure on the second export cannot leave a half-applied repo.
-	const [design, tokens] = await Promise.all([
-		exportKit(options.slug, "design-md"),
-		exportKit(options.slug, options.tokensFormat),
-	])
+	let failureStage: "fetch" | "plan" | "write" = "fetch"
+	let writtenArtifactCount = 0
+	try {
+		// Both fetches complete before the first write, so a 403 or a network
+		// failure on the second export cannot leave a half-applied repo.
+		const [design, tokens] = await Promise.all([
+			exportKit(options.slug, "design-md"),
+			exportKit(options.slug, options.tokensFormat),
+		])
+		failureStage = "plan"
 
-	const tokensName = assertSafeArtifactName(tokens.filename)
-	if (tokensName === STAMP_FILENAME || tokensName === DESIGN_FILENAME) {
-		throw new Error(
-			`The tokens file for "${
-				options.slug
-			}" would be written to ${tokensName}, which collides with the ${
-				tokensName === STAMP_FILENAME ? "stamp" : "design brief"
-			}. Nothing was written. Choose another tokens format.`,
+		const tokensName = assertSafeArtifactName(tokens.filename)
+		if (tokensName === STAMP_FILENAME || tokensName === DESIGN_FILENAME) {
+			throw new Error(
+				`The tokens file for "${
+					options.slug
+				}" would be written to ${tokensName}, which collides with the ${
+					tokensName === STAMP_FILENAME ? "stamp" : "design brief"
+				}. Nothing was written. Choose another tokens format.`,
+			)
+		}
+
+		const designMdDigest = hashContent(design.body)
+		const identity = parseExportIdentity(design.body)
+		if (priorStamp) {
+			notes.push(
+				...driftNotes(priorStamp, options.slug, identity, designMdDigest),
+			)
+		}
+
+		const artifacts = [
+			planArtifact(dir, DESIGN_FILENAME, design.body, priorStamp),
+			planArtifact(dir, tokensName, tokens.body, priorStamp),
+		]
+		const conflicts = artifacts.filter(
+			(artifact) => artifact.status === "conflict",
 		)
-	}
 
-	const designMdDigest = hashContent(design.body)
-	const identity = parseExportIdentity(design.body)
-	if (priorStamp) {
-		notes.push(
-			...driftNotes(priorStamp, options.slug, identity, designMdDigest),
+		const result: ApplyResult = {
+			mode: "preview",
+			slug: options.slug,
+			tokensFormat: options.tokensFormat,
+			dir,
+			stampPath,
+			artifacts,
+			conflicts,
+			overwritten: [],
+			notes,
+		}
+
+		if (options.preview) return result
+		if (conflicts.length > 0 && !options.force) {
+			await recordImplementationOutcome(identity.slug ?? options.slug, {
+				outcome: "refused",
+				reason: "conflict",
+				conflictCount: conflicts.length,
+			})
+			return { ...result, mode: "refused" }
+		}
+
+		failureStage = "write"
+		const appliedAt = new Date().toISOString()
+		const overwritten: PlannedArtifact[] = []
+		for (const artifact of artifacts) {
+			if (artifact.status === "unchanged") continue
+			writeFileSync(artifact.path, artifact.body, "utf8")
+			writtenArtifactCount += 1
+			if (artifact.status === "conflict") overwritten.push(artifact)
+		}
+
+		// Artifacts written by an earlier apply and untouched by this one keep their
+		// records, so switching tokens format does not turn the previous tokens file
+		// into an unrecorded stranger on the next run.
+		const writtenPaths = new Set(artifacts.map((artifact) => artifact.relPath))
+		const carried = (priorStamp?.artifacts ?? []).filter(
+			(entry) => !writtenPaths.has(entry.path),
 		)
+		const stamp: ApplyStamp = {
+			stampVersion: STAMP_VERSION,
+			// Omitted rather than null when the export did not state one, so a reader
+			// can tell "built against a server that predates the contract" from "the
+			// contract was read and was empty".
+			...(identity.contract ? { designMdContract: identity.contract } : {}),
+			kit: {
+				id: identity.id,
+				// What the server calls this kit, not what the caller typed: `apply`
+				// accepts a permanent id, and stamping that as the slug would record a
+				// handle no human reading the file can use.
+				slug: identity.slug ?? options.slug,
+				version: identity.version,
+				designMdDigest,
+			},
+			layers: [],
+			artifacts: [
+				...carried,
+				...artifacts.map((artifact) => ({
+					path: artifact.relPath,
+					hash: artifact.hash,
+					writtenAt: artifact.writtenAt ?? appliedAt,
+				})),
+			].sort((a, b) => a.path.localeCompare(b.path)),
+			integration: {
+				tokensEntry:
+					options.tokensEntry ?? priorStamp?.integration?.tokensEntry ?? null,
+			},
+			appliedAt,
+		}
+		writeFileSync(stampPath, `${JSON.stringify(stamp, null, 2)}\n`, "utf8")
+		const unchangedArtifactCount = artifacts.length - writtenArtifactCount
+		await recordImplementationOutcome(
+			identity.slug ?? options.slug,
+			writtenArtifactCount > 0
+				? {
+						outcome: "files_written",
+						tokensFormat: options.tokensFormat,
+						artifactCount: writtenArtifactCount,
+						unchangedCount: unchangedArtifactCount,
+						overwrittenCount: overwritten.length,
+					}
+				: {
+						outcome: "artifacts_current",
+						tokensFormat: options.tokensFormat,
+						artifactCount: unchangedArtifactCount,
+					},
+		)
+
+		return { ...result, mode: "applied", overwritten, stamp }
+	} catch (error) {
+		await recordImplementationOutcome(options.slug, {
+			outcome: "failed",
+			stage: failureStage,
+			artifactCount: writtenArtifactCount,
+			reason:
+				failureStage === "write"
+					? "filesystem"
+					: failureStage === "plan"
+						? "invalid_artifact"
+						: error instanceof ApiError
+							? "api"
+							: error instanceof TypeError
+								? "network"
+								: "unknown",
+		})
+		throw error
 	}
-
-	const artifacts = [
-		planArtifact(dir, DESIGN_FILENAME, design.body, priorStamp),
-		planArtifact(dir, tokensName, tokens.body, priorStamp),
-	]
-	const conflicts = artifacts.filter(
-		(artifact) => artifact.status === "conflict",
-	)
-
-	const result: ApplyResult = {
-		mode: "preview",
-		slug: options.slug,
-		tokensFormat: options.tokensFormat,
-		dir,
-		stampPath,
-		artifacts,
-		conflicts,
-		overwritten: [],
-		notes,
-	}
-
-	if (options.preview) return result
-	if (conflicts.length > 0 && !options.force) {
-		return { ...result, mode: "refused" }
-	}
-
-	const appliedAt = new Date().toISOString()
-	const overwritten: PlannedArtifact[] = []
-	for (const artifact of artifacts) {
-		if (artifact.status === "unchanged") continue
-		writeFileSync(artifact.path, artifact.body, "utf8")
-		if (artifact.status === "conflict") overwritten.push(artifact)
-	}
-
-	// Artifacts written by an earlier apply and untouched by this one keep their
-	// records, so switching tokens format does not turn the previous tokens file
-	// into an unrecorded stranger on the next run.
-	const writtenPaths = new Set(artifacts.map((artifact) => artifact.relPath))
-	const carried = (priorStamp?.artifacts ?? []).filter(
-		(entry) => !writtenPaths.has(entry.path),
-	)
-	const stamp: ApplyStamp = {
-		stampVersion: STAMP_VERSION,
-		// Omitted rather than null when the export did not state one, so a reader
-		// can tell "built against a server that predates the contract" from "the
-		// contract was read and was empty".
-		...(identity.contract ? { designMdContract: identity.contract } : {}),
-		kit: {
-			id: identity.id,
-			// What the server calls this kit, not what the caller typed: `apply`
-			// accepts a permanent id, and stamping that as the slug would record a
-			// handle no human reading the file can use.
-			slug: identity.slug ?? options.slug,
-			version: identity.version,
-			designMdDigest,
-		},
-		layers: [],
-		artifacts: [
-			...carried,
-			...artifacts.map((artifact) => ({
-				path: artifact.relPath,
-				hash: artifact.hash,
-				writtenAt: artifact.writtenAt ?? appliedAt,
-			})),
-		].sort((a, b) => a.path.localeCompare(b.path)),
-		integration: {
-			tokensEntry:
-				options.tokensEntry ?? priorStamp?.integration?.tokensEntry ?? null,
-		},
-		appliedAt,
-	}
-	writeFileSync(stampPath, `${JSON.stringify(stamp, null, 2)}\n`, "utf8")
-	await recordApplyCompleted(identity.slug ?? options.slug)
-
-	return { ...result, mode: "applied", overwritten, stamp }
 }
 
 const CONFLICT_EXPLANATIONS: Record<

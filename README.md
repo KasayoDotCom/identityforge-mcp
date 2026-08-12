@@ -170,13 +170,16 @@ A kit already names its heading, body, and mono faces. These two answer the case
 `apply_theme` (and `identityforge apply`) writes three files into the target directory:
 
 Identity Forge requests carry one random reference that lasts only for the
-current CLI or MCP process. A successful local apply also sends one bodyless
-completion signal. Running as an MCP server, requests also carry the client name
+current CLI or MCP process. A local apply reports one bounded result: files
+written, artifacts already current, a safe conflict refusal, or the stage where
+it failed. The report contains counts and classifications, never local paths or
+error prose. Running as an MCP server, requests also carry the client name
 your editor or agent already sends in the MCP handshake (`claude-code`,
 `cursor-vscode`, `codex`), so usage can be attributed to a product rather than to
-nothing. None of this includes paths, prompts, file contents, repository names,
-or a persistent installation identifier. Set `IDENTITYFORGE_TELEMETRY=0` to omit
-all three; ordinary API requests still appear in server access logs.
+nothing. None of this includes paths, filenames, prompts, file contents,
+repository names, exception text, or a persistent installation identifier. Set
+`IDENTITYFORGE_TELEMETRY=0` to omit the process reference and local outcome
+reports; ordinary API requests still appear in server access logs.
 
 | File | What it is |
 | --- | --- |

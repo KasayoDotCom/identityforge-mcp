@@ -26,6 +26,11 @@ import {
 const DESIGN_BODY = "# Acid Signal Black\n\nUse the primary for one thing.\n"
 const TOKENS_BODY = '{"color":{"primary":{"$value":"#CCFF00"}}}\n'
 const TOKENS_FILENAME = "acid-signal-black.json"
+interface RecordedRequest {
+	url: string
+	method: string
+	body: Record<string, unknown> | null
+}
 
 /** Serves the two exports `applyTheme` fetches, keyed on the format query. */
 function stubExports(
@@ -33,7 +38,7 @@ function stubExports(
 		design?: string
 		tokens?: string
 		tokensFilename?: string
-		requests?: Array<{ url: string; method: string; hasBody: boolean }>
+		requests?: RecordedRequest[]
 		failTelemetry?: boolean
 	} = {},
 ): () => void {
@@ -45,9 +50,12 @@ function stubExports(
 		bodies.requests?.push({
 			url,
 			method: init?.method ?? "GET",
-			hasBody: init?.body != null,
+			body:
+				typeof init?.body === "string"
+					? (JSON.parse(init.body) as Record<string, unknown>)
+					: null,
 		})
-		if (url.endsWith("/applied")) {
+		if (url.endsWith("/implementation-outcome")) {
 			if (bodies.failTelemetry) throw new Error("telemetry unavailable")
 			return new Response(null, { status: 204 })
 		}
@@ -71,16 +79,22 @@ function stubExports(
 test(
 	"a successful apply records one metadata-only completion without depending on telemetry",
 	withTempDir(async (dir) => {
-		const requests: Array<{ url: string; method: string; hasBody: boolean }> = []
+		const requests: RecordedRequest[] = []
 		const restore = stubExports({ requests, failTelemetry: true })
 		try {
 			const result = await apply(dir)
 			assert.equal(result.mode, "applied")
 			assert.equal(existsSync(join(dir, STAMP_FILENAME)), true)
 			assert.deepEqual(requests.at(-1), {
-				url: "http://api.test/api/v1/kits/acid-signal-black/applied",
+				url: "http://api.test/api/v1/kits/acid-signal-black/implementation-outcome",
 				method: "POST",
-				hasBody: false,
+				body: {
+					outcome: "files_written",
+					tokensFormat: "dtcg",
+					artifactCount: 2,
+					unchangedCount: 0,
+					overwrittenCount: 0,
+				},
 			})
 		} finally {
 			restore()
@@ -184,7 +198,8 @@ test(
 test(
 	"re-applying over untouched files succeeds and reports them unchanged",
 	withTempDir(async (dir) => {
-		const restore = stubExports()
+		const requests: RecordedRequest[] = []
+		const restore = stubExports({ requests })
 		try {
 			const first = await apply(dir)
 			const second = await apply(dir)
@@ -202,6 +217,11 @@ test(
 					?.writtenAt
 			assert.ok(writtenAt(first.stamp))
 			assert.equal(writtenAt(readStampFile(dir)), writtenAt(first.stamp))
+			assert.deepEqual(requests.at(-1)?.body, {
+				outcome: "artifacts_current",
+				tokensFormat: "dtcg",
+				artifactCount: 2,
+			})
 		} finally {
 			restore()
 		}
@@ -211,7 +231,8 @@ test(
 test(
 	"a locally edited file is a conflict, and the default apply writes nothing",
 	withTempDir(async (dir) => {
-		const restore = stubExports()
+		const requests: RecordedRequest[] = []
+		const restore = stubExports({ requests })
 		try {
 			await apply(dir)
 			const edited = `${DESIGN_BODY}\n## House rules\n\nOur own section.\n`
@@ -232,6 +253,11 @@ test(
 			assert.match(report, /REFUSED/)
 			assert.match(report, /DESIGN\.md/)
 			assert.match(report, /force/)
+			assert.deepEqual(requests.at(-1)?.body, {
+				outcome: "refused",
+				reason: "conflict",
+				conflictCount: 1,
+			})
 		} finally {
 			restore()
 		}
@@ -532,7 +558,11 @@ test(
 	withTempDir(async (dir) => {
 		// The fallback filename is built from the slug, which is caller supplied,
 		// so containment is the check that holds however the name was formed.
-		const restore = stubExports({ tokensFilename: "../../evil.json" })
+		const requests: RecordedRequest[] = []
+		const restore = stubExports({
+			tokensFilename: "../../evil.json",
+			requests,
+		})
 		try {
 			await assert.rejects(
 				applyTheme({ slug: "../../evil", dir, tokensFormat: "dtcg" }),
@@ -541,6 +571,12 @@ test(
 			assert.equal(existsSync(join(dir, "DESIGN.md")), false)
 			assert.equal(existsSync(join(dir, STAMP_FILENAME)), false)
 			assert.equal(existsSync(join(dirname(dirname(dir)), "evil.json")), false)
+			assert.deepEqual(requests.at(-1)?.body, {
+				outcome: "failed",
+				stage: "plan",
+				reason: "invalid_artifact",
+				artifactCount: 0,
+			})
 		} finally {
 			restore()
 		}
