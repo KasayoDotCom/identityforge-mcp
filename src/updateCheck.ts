@@ -89,12 +89,15 @@ function printUpdateNotice(
 	)
 }
 
-function fetchLatestVersion(): Promise<string | undefined> {
+function fetchLatestVersion(
+	keepProcessAlive = false,
+): Promise<string | undefined> {
 	return new Promise((resolve) => {
 		let settled = false
 		const finish = (version?: string) => {
 			if (settled) return
 			settled = true
+			clearTimeout(timeout)
 			resolve(version)
 		}
 		const request = get(
@@ -122,13 +125,13 @@ function fetchLatestVersion(): Promise<string | undefined> {
 				response.on("error", () => finish())
 			},
 		)
-		request.on("socket", (socket) => socket.unref())
+		if (!keepProcessAlive) request.on("socket", (socket) => socket.unref())
 		request.on("error", () => finish())
 		const timeout = setTimeout(() => {
 			request.destroy()
 			finish()
 		}, 3000)
-		timeout.unref()
+		if (!keepProcessAlive) timeout.unref()
 	})
 }
 
@@ -177,7 +180,7 @@ export async function getUpdateStatus(
 	const cached = readConfig().updateCheck
 	let latestVersion: string | undefined
 	try {
-		latestVersion = await fetchLatestVersion()
+		latestVersion = await fetchLatestVersion(true)
 	} catch {
 		latestVersion = undefined
 	}
