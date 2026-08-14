@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto"
 import { resolveApiKey, resolveApiUrl } from "./config.js"
 import { isVersionGreater } from "./updateCheck.js"
 
-export const CLI_VERSION = "0.4.3"
+export const CLI_VERSION = "0.4.4"
 
 export type ApiClient = "cli" | "mcp"
 
@@ -492,7 +492,13 @@ export interface NamingGeneration {
 }
 
 export interface DomainEvidence {
-	kind: "iana_bootstrap" | "rdap" | "dns" | "serp" | "registrar"
+	kind:
+		| "iana_bootstrap"
+		| "rdap"
+		| "dns"
+		| "serp"
+		| "registrar"
+		| "landing_page"
 	source: string
 	checkedAt: string
 	outcome: string
@@ -548,13 +554,34 @@ export interface DomainCheckResult {
 		checkedAt: string
 		evidence: DomainEvidence[]
 	}
+	aftermarket: {
+		status:
+			| "listing_observed"
+			| "no_listing_signal_observed"
+			| "unknown"
+			| "not_requested"
+		siteUse:
+			| "sale_landing_page_observed"
+			| "reserved_page_observed"
+			| "site_observed"
+			| "unreachable"
+			| "unknown"
+			| "not_requested"
+		checkedAt: string
+		url: string | null
+		title: string | null
+		marketplace: string | null
+		priceTexts: string[]
+		statement: string
+		evidence: DomainEvidence[]
+	}
 	availabilityHint: {
 		status: "might_be_available" | "likely_unavailable_or_in_use" | "unknown"
 		basis: "dns_and_rdap_proxy_only"
 		statement: string
 		nextSteps: ["visit_url", "check_registrar"]
 	}
-	purchaseAvailability: {
+	registrationAvailability: {
 		status: "available" | "unavailable" | "unknown"
 		reason: string
 		statement: string
@@ -563,6 +590,23 @@ export interface DomainCheckResult {
 			registrationCost: string
 			renewalCost: string
 		}
+	}
+	purchaseAvailability: DomainCheckResult["registrationAvailability"]
+	acquisition: {
+		intent: "new_registration" | "aftermarket" | "either"
+		status:
+			| "registration_available"
+			| "aftermarket_listing_observed"
+			| "no_new_registration_path"
+			| "no_aftermarket_listing_observed"
+			| "unknown"
+		statement: string
+	}
+	cache: {
+		registration: boolean
+		dns: boolean
+		registrar: boolean
+		aftermarket: boolean
 	}
 	cautions?: string[]
 }
@@ -576,7 +620,22 @@ export interface DomainCheckBatch {
 		errorCount?: number
 		checkedAt: string
 		registrationSemantics: string
+		registrationAvailability: "not_assessed" | "assessed"
+		aftermarketAvailability: "not_assessed" | "assessed"
 		purchaseAvailability: "not_assessed" | "assessed"
+		cacheHits: {
+			registration: number
+			dns: number
+			registrar: number
+			aftermarket: number
+		}
+		usageUnits?: number
+		billing?: {
+			nominalUnits: number
+			chargedUnits: number
+			reason: "new_request" | "recent_exact_repeat"
+			repeatWindowSeconds: number
+		}
 	}
 }
 
@@ -625,6 +684,13 @@ export interface NamingResearchContext {
 		capabilities: Array<Record<string, unknown>>
 		instructions: string[]
 		evidenceContract: Record<string, string>
+	}
+	trademarkScreening: {
+		asOf: string
+		semantics: string
+		providers: Array<Record<string, unknown>>
+		recordEvidenceAs: Record<string, unknown>
+		handoff: string
 	}
 	taskTemplate: Record<string, unknown>
 }
@@ -1439,6 +1505,7 @@ export async function checkDomains(input: {
 	domains: string[]
 	includeSerp?: boolean
 	includeRegistrar?: boolean
+	acquisitionIntent?: "new_registration" | "aftermarket" | "either"
 	market?: string
 	language?: string
 }): Promise<DomainCheckBatch> {

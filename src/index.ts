@@ -37,25 +37,25 @@ import {
 	createBrandProject,
 	createNamingProject,
 	createTheme,
-	deleteTheme,
 	deleteBrandVariation,
+	deleteTheme,
 	diffBrandProjectVersions,
 	diffKitVersions,
 	exportBrandProject,
 	exportKit,
 	fontPairings,
-	generateNamingCandidates,
 	generateMockups,
+	generateNamingCandidates,
 	getBrandLayers,
 	getBrandProject,
 	getBrandProjectVersion,
-	getMockupJob,
 	getImageDirection,
 	getInterfaceStyle,
 	getKit,
 	getKitHistorySnapshot,
 	getKitVersion,
 	getMe,
+	getMockupJob,
 	getNamingResearchContext,
 	getPageRecipe,
 	getProjectContext,
@@ -68,11 +68,11 @@ import {
 	listInterfaceStyles,
 	listKitHistory,
 	listKitVersions,
+	listMockupJobs,
 	listNamingCandidates,
 	listNamingGenerations,
 	listNamingProjects,
 	listNamingRecipes,
-	listMockupJobs,
 	listPageRecipes,
 	matchPalette,
 	patchNamingCandidates,
@@ -106,16 +106,18 @@ import {
 	resolveApiUrl,
 	updateConfig,
 } from "./config.js"
+import { inspectCurrentMcp } from "./doctor.js"
 import {
 	CLI_PACKAGE_SPEC,
 	type Client,
 	SUPPORTED_CLIENTS,
+	inspectClientConfig,
 	installClient,
 } from "./install.js"
 import { browserLogin } from "./login.js"
 import { runMcp } from "./mcp.js"
 import { formatThemeStatus, themeStatus } from "./status.js"
-import { startUpdateCheck } from "./updateCheck.js"
+import { getUpdateStatus, startUpdateCheck } from "./updateCheck.js"
 
 function fail(err: unknown): never {
 	if (err instanceof ApiError) {
@@ -1798,7 +1800,7 @@ naming
 	.option("--notes <text>", "Replace candidate notes for every moved item.")
 	.option(
 		"--evidence <path|->",
-		"JSON object recorded against every moved item: why this decision was made. Read from a file, or from stdin with -.",
+		"JSON object whose top-level keys merge into every moved item's evidence, preserving unrelated sources. Read from a file, or from stdin with -.",
 	)
 	.option(
 		"--expected-updated-at <marker>",
@@ -1951,7 +1953,7 @@ naming
 naming
 	.command("trademarks")
 	.description(
-		"EUIPO screening is coming soon. Until production access is enabled, this returns 503 without calling the provider.",
+		"Run the implemented EUIPO API screening when this deployment has enabled provider access. Otherwise returns a structured 503 with the official manual handoff and makes no provider request.",
 	)
 	.argument("<query>", "Verbal element to search.")
 	.requiredOption("--project <uuid>", "Naming project id.")
@@ -1982,7 +1984,7 @@ naming
 naming
 	.command("domains")
 	.description(
-		"Check DNS plus RDAP for 1 unit per unique domain; optional self-hosted SERP adds 1 unit per domain. No DNS records only means a domain might be available.",
+		"Check low-level DNS, RDAP, registrar, optional landing-page, and optional SERP evidence. No DNS records alone never establish availability.",
 	)
 	.argument("<domains...>", "One to 20 bare domain names.")
 	.option("--serp", "Include bounded SERP collision signals.")
@@ -1992,6 +1994,11 @@ naming
 	)
 	.option("--market <market>", "Market context for the SERP query.")
 	.option("--language <tag>", "Search language tag, e.g. de-DE.")
+	.option(
+		"--intent <intent>",
+		"Acquisition intent: new_registration, aftermarket, or either. Default new_registration; aftermarket adds 1 unit per domain.",
+		"new_registration",
+	)
 	.action(
 		async (
 			domains: string[],
@@ -2000,6 +2007,7 @@ naming
 				registrar?: boolean
 				market?: string
 				language?: string
+				intent: string
 			},
 		) => {
 			try {
@@ -2008,6 +2016,56 @@ naming
 						domains,
 						includeSerp: Boolean(opts.serp),
 						includeRegistrar: Boolean(opts.registrar),
+						acquisitionIntent: oneOf(
+							opts.intent,
+							["new_registration", "aftermarket", "either"] as const,
+							"intent",
+						),
+						market: opts.market,
+						language: opts.language,
+					}),
+				)
+			} catch (err) {
+				fail(err)
+			}
+		},
+	)
+
+naming
+	.command("acquisition")
+	.description(
+		"Assess a stated new-registration or aftermarket acquisition path, keeping registrar and public landing-page evidence separate.",
+	)
+	.argument("<domains...>", "One to 20 bare domain names.")
+	.requiredOption(
+		"--intent <intent>",
+		"new_registration, aftermarket, or either.",
+	)
+	.option("--serp", "Add market-collision search evidence.")
+	.option("--market <market>", "Market context for the SERP query.")
+	.option("--language <tag>", "Search language tag, e.g. de-DE.")
+	.action(
+		async (
+			domains: string[],
+			opts: {
+				intent: string
+				serp?: boolean
+				market?: string
+				language?: string
+			},
+		) => {
+			try {
+				const intent = oneOf(
+					opts.intent,
+					["new_registration", "aftermarket", "either"] as const,
+					"intent",
+				)
+				jsonOutput(
+					await checkDomains({
+						domains,
+						includeSerp: Boolean(opts.serp),
+						includeRegistrar: intent !== "aftermarket",
+						acquisitionIntent: intent,
 						market: opts.market,
 						language: opts.language,
 					}),
@@ -2029,14 +2087,62 @@ program
 		"--api-url <url>",
 		"Bake an API base into the server env (for dev/self-host).",
 	)
-	.action((opts: { client: string; apiUrl?: string }) => {
+	.action(async (opts: { client: string; apiUrl?: string }) => {
 		try {
-			const file = installClient(opts.client as Client, {
+			const client = oneOf(opts.client, SUPPORTED_CLIENTS, "client") as Client
+			const file = installClient(client, {
 				apiUrl: opts.apiUrl,
 			})
+			const mcp = await inspectCurrentMcp()
+			if (mcp.missingRequiredTools.length > 0) {
+				throw new Error(
+					`MCP initialization succeeded, but required tools are missing: ${mcp.missingRequiredTools.join(
+						", ",
+					)}.`,
+				)
+			}
 			process.stdout.write(
-				`Configured Identity Forge MCP server for ${opts.client}:\n  ${file}\n\nRestart the agent to pick it up, then sign in with:\n  npx --yes ${CLI_PACKAGE_SPEC} login\n`,
+				`Configured and verified Identity Forge MCP ${mcp.version} (${mcp.toolCount} tools) for ${opts.client}:\n  ${file}\n\nRestart the agent to pick it up, then sign in with:\n  npx --yes ${CLI_PACKAGE_SPEC} login\n`,
 			)
+		} catch (err) {
+			fail(err)
+		}
+	})
+
+program
+	.command("doctor")
+	.description(
+		"Verify an agent's Identity Forge configuration and initialize this package's MCP server without spending quota.",
+	)
+	.requiredOption(
+		"-c, --client <client>",
+		`Client to inspect: ${SUPPORTED_CLIENTS.join(" | ")}.`,
+	)
+	.action(async (opts: { client: string }) => {
+		try {
+			const client = oneOf(opts.client, SUPPORTED_CLIENTS, "client") as Client
+			const config = inspectClientConfig(client)
+			const mcp = await inspectCurrentMcp()
+			jsonOutput({
+				ok: config.current && mcp.missingRequiredTools.length === 0,
+				config,
+				mcp,
+			})
+			if (!config.current || mcp.missingRequiredTools.length > 0)
+				process.exitCode = 1
+		} catch (err) {
+			fail(err)
+		}
+	})
+
+program
+	.command("update-check")
+	.description(
+		"Check npm now and report whether this CLI/MCP package has a newer release. The normal startup check remains non-blocking.",
+	)
+	.action(async () => {
+		try {
+			jsonOutput(await getUpdateStatus(CLI_VERSION))
 		} catch (err) {
 			fail(err)
 		}
@@ -2091,6 +2197,7 @@ program
 
 program
 	.command("whoami")
+	.alias("usage")
 	.description(
 		"Show what this key can actually do: plan, scopes it holds and lacks, quota left, AI credits, and saved-kit slots. Asks the server, so it also tells you whether the key still works. Free: it spends no quota and no credits, and still answers when you are over quota.",
 	)

@@ -18,6 +18,11 @@ test("CLI_VERSION matches package.json", () => {
 	assert.equal(CLI_VERSION, readJson("package.json").version)
 })
 
+test("every CLI start triggers the non-blocking update check", () => {
+	const source = readFileSync(join(packageRoot, "src/index.ts"), "utf8")
+	assert.match(source, /startUpdateCheck\(CLI_VERSION\)/)
+})
+
 test("package-lock.json matches package.json", () => {
 	const lock = readJson("package-lock.json") as {
 		version: string
@@ -54,7 +59,10 @@ test("the README's advertised tool count matches what the server registers", () 
 	const readme = readFileSync(join(packageRoot, "README.md"), "utf8")
 	const advertised = readme.match(/your agent gets (\d+) tools/)
 
-	assert.ok(advertised, "README no longer states a tool count in the known form")
+	assert.ok(
+		advertised,
+		"README no longer states a tool count in the known form",
+	)
 	assert.equal(
 		Number(advertised[1]),
 		registered.size,

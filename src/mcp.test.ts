@@ -174,7 +174,7 @@ test("mockup spend and the EUIPO production gate need no confirmation field", as
 		assert.match(byName.get("generate_mockups")?.description ?? "", /AI credit/)
 		assert.match(
 			byName.get("search_trademarks")?.description ?? "",
-			/coming soon/i,
+			/implemented official API adapter/i,
 		)
 		assert.match(
 			byName.get("search_trademarks")?.description ?? "",

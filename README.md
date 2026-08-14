@@ -12,7 +12,8 @@
   <a href="#for-people">For people</a> ·
   <a href="#for-agents">For agents</a> ·
   <a href="#mcp-tools">MCP tools</a> ·
-  <a href="#cli-commands">CLI reference</a>
+  <a href="#cli-commands">CLI reference</a> ·
+  <a href="https://identityforge.io/docs">Docs</a>
 </p>
 
 <p align="center">
@@ -20,6 +21,8 @@
   <a href="https://github.com/KasayoDotCom/identityforge-mcp/actions/workflows/ci.yml"><img src="https://github.com/KasayoDotCom/identityforge-mcp/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/npm/l/identityforge" alt="MIT license"></a>
 </p>
+
+**Free to use.** 69 of 79 design kits are free, with all 6 export formats, the CLI, the MCP server, and the API. No account required. Pro unlocks 10 additional kits, 1,000 AI generations/month, and advanced features.
 
 ## For people
 
@@ -111,6 +114,9 @@ The same discovery runs the [kit gallery](https://identityforge.io/kits) and the
 | Pi | `pi` | `.pi/agent/mcp.json` |
 
 All of them run the same local stdio server via `npx -y identityforge@latest mcp`.
+After installation, `identityforge doctor --client <name>` checks that the client
+points at the rolling package and initializes the package's MCP server without
+calling the Identity Forge API or spending quota.
 
 ### Install the agent plugin and skill
 
@@ -143,7 +149,7 @@ the `install --client cursor` command above to connect the same MCP server.
 
 ## MCP tools
 
-Once connected, your agent gets 63 tools. Browsing free kits needs no key; scopes are noted where they apply.
+Once connected, your agent gets 64 tools. Browsing free kits needs no key; scopes are noted where they apply.
 
 ### Find a design kit
 
@@ -171,9 +177,9 @@ A kit already names its heading, body, and mono faces. These two answer the case
 
 Identity Forge requests carry one random reference that lasts only for the
 current CLI or MCP process. A local apply reports one bounded result: files
-written, artifacts already current, a safe conflict refusal, or the stage where
-it failed. The report contains counts and classifications, never local paths or
-error prose. Running as an MCP server, requests also carry the client name
+written, artifacts already current, a safe conflict refusal, or the stage where it failed. The report
+contains counts and classifications, never local paths or error prose. Running
+as an MCP server, requests also carry the client name
 your editor or agent already sends in the MCP handshake (`claude-code`,
 `cursor-vscode`, `codex`), so usage can be attributed to a product rather than to
 nothing. None of this includes paths, filenames, prompts, file contents,
@@ -334,7 +340,8 @@ None of these writes anything. Restoring an old state is an `update_theme` call 
 - `get_naming_research_context`: read the brief, board, evidence, capabilities, and small-task handoff contract, without server ranking.
 - `search_name_evidence`: run bounded model-authored searches through self-hosted SearXNG and return evidence without verdicts. One account-wide monthly unit per query.
 - `check_domains`: DNS plus distinct RDAP, registrar, and optional self-hosted SERP evidence. Basic research costs one unit per unique domain; SERP adds one. Absent DNS records only mean a domain might be available.
-- `search_trademarks`: EUIPO automation is coming soon and returns 503 without a provider call until production access is enabled.
+- `assess_domain_acquisition`: state whether the goal is a new registration, an aftermarket purchase, or either. It reports registrar registration evidence and bounded public landing-page evidence separately, including literal sale, marketplace, reserved-page, and visible-price signals. It never validates the seller or guarantees purchase. Aftermarket evidence adds one unit per unique domain; an exact successful repeat within ten minutes costs zero.
+- `search_trademarks`: the EUIPO official-API adapter runs only when the deployment reports live provider access. Otherwise it returns structured upstream/implementation/runtime status plus an official manual handoff and makes no provider request. The research context lists EUIPO, DPMA, WIPO, and USPTO coverage; screening is never legal clearance.
 
 ### Build a brand and share it with a client
 
@@ -381,6 +388,9 @@ Image directions, interface styles, and page recipes carry ids too, and the same
 npx -y identityforge@latest login    # browser sign-in (PKCE loopback)
 identityforge login --key ifk_…      # or paste a key (headless)
 identityforge whoami                 # plan, scopes, quota, credits, saved-kit slots (free)
+identityforge usage                  # alias for whoami
+identityforge update-check           # current/latest package version as JSON
+identityforge doctor --client codex  # verify config and MCP capabilities without API usage
 identityforge logout                 # remove stored credentials
 identityforge themes                 # list kits
 identityforge themes -q "fintech dashboard, calm and trustworthy"
@@ -468,7 +478,8 @@ identityforge naming candidates --project <uuid> --status shortlisted,finalist
 identityforge naming generations --project <uuid>
 identityforge naming research-context --project <uuid>
 identityforge naming search --file research-tasks.json
-# Coming soon: returns 503 without a provider call until EUIPO production access is enabled
+identityforge naming acquisition candidate.com --intent either
+# Returns live EUIPO evidence when enabled, otherwise a structured official manual handoff
 identityforge naming trademarks "Candidate name" --project <uuid> --candidate <uuid> --nice-classes 9,42
 identityforge naming move <candidate-uuid> --project <uuid> --status finalist --notes "Strong market fit"
 identityforge naming rank <candidate-uuid>=1 <candidate-uuid>=2 --project <uuid>
