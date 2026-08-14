@@ -1,6 +1,6 @@
 {
 	"name": "identityforge",
-	"version": "0.4.4",
+	"version": "0.4.5",
 	"mcpName": "io.identityforge/mcp",
 	"description": "Agent-native brand naming, domain research, and design systems through one CLI and MCP server.",
 	"type": "module",
@@ -29,8 +29,9 @@
 		"start": "node dist/index.js",
 		"test": "tsx --test src/*.test.ts",
 		"typecheck": "tsc --noEmit -p tsconfig.json",
+		"smoke:update-check": "node scripts/smoke-update-check.mjs",
 		"smoke:mcp": "node scripts/smoke-mcp.mjs",
-		"prepublishOnly": "npm test && npm run typecheck && npm run build && npm run smoke:mcp"
+		"prepublishOnly": "npm test && npm run typecheck && npm run build && npm run smoke:update-check && npm run smoke:mcp"
 	},
 	"keywords": [
 		"identity-forge",

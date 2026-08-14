@@ -60,6 +60,8 @@ jobs:
           version=$(node -p "require('./package.json').version")
           test "$(node "$smoke_dir/node_modules/identityforge/dist/index.js" --version)" = "$version"
           node -e 'const p=require(process.argv[1]+"/node_modules/identityforge/package.json"); if(p.version!==process.argv[2]||p.mcpName!=="io.identityforge/mcp"||p.repository?.url!=="git+https://github.com/KasayoDotCom/identityforge-mcp.git") process.exit(1)' "$smoke_dir" "$version"
+          update_status=$(node "$smoke_dir/node_modules/identityforge/dist/index.js" update-check)
+          node -e 'const s=JSON.parse(process.argv[1]); if(s.currentVersion!==process.argv[2]||typeof s.updateAvailable!=="boolean"||!["registry","cache","unavailable"].includes(s.source)) process.exit(1)' "$update_status" "$version"
           printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"release-smoke","version":"1.0.0"}}}' '{"jsonrpc":"2.0","method":"notifications/initialized"}' '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' | env -u IDENTITYFORGE_API_KEY node "$smoke_dir/node_modules/identityforge/dist/index.js" mcp > "$RUNNER_TEMP/mcp.jsonl"
           node -e 'const fs=require("node:fs"),r=fs.readFileSync(process.argv[1],"utf8").trim().split("\n").map(JSON.parse); if(r.find(x=>x.id===1)?.result?.serverInfo?.version!==process.argv[2]||!r.find(x=>x.id===2)?.result?.tools?.length) process.exit(1)' "$RUNNER_TEMP/mcp.jsonl" "$version"
       - if: steps.gate.outputs.publish == 'true'
