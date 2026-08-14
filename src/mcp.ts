@@ -177,9 +177,9 @@ Brand naming and domain research are the secondary flow. If the user needs a nam
 1. Call list_naming_recipes and choose strategies that fit the brief. If there is no existing board, create_naming_project; otherwise use list_naming_projects.
 2. Call get_naming_research_context before orchestrating substantial work. It returns the brief, board, existing evidence, capabilities, and a small-task handoff contract. Build semantic territories first. Keep judgement with the orchestrator and delegate bounded questions; do not replace judgement with server scoring or fixed stage gates.
 3. Use generate_names for Identity Forge's built-in operator-owned model, with a specific brief, 1-8 recipe ids, and an idempotencyKey so a retry cannot spend twice. Successful names are persisted automatically and spend the API-key owner's AI credits only after the candidate rows commit. If your current agent or another user-authorized offline process proposes names, call add_name_candidates with stable caller-generated UUIDs. Runtime product code must not call paid external LLM APIs. Use list_name_generations to audit provenance.
-4. Use search_name_evidence for model-authored exact-name, market, meaning, language, negative-association, or official-register discovery queries. It returns bounded self-hosted SearXNG results without classifying them and spends one account-wide monthly unit per query. Use check_domains for separate DNS, RDAP, and optional domain-SERP evidence: basic research costs one unit per unique domain and SERP adds one more. Attach raw evidence plus your interpretation to candidates; neither tool accepts, rejects, ranks, legally clears, or guarantees a purchase.
+4. Use search_name_evidence for model-authored exact-name, market, meaning, language, negative-association, or official-register discovery queries. It returns bounded self-hosted SearXNG results without classifying them and spends one account-wide monthly unit per query. Use check_domains for separate low-level DNS, RDAP, registrar, and optional domain-SERP evidence. Use assess_domain_acquisition when the question is specifically new registration, aftermarket purchase, or either; it keeps those paths separate and can inspect a public landing page. Basic research costs one unit per unique domain, aftermarket evidence adds one, and SERP adds one. Exact repeats within ten minutes are not charged twice. Attach raw evidence plus your interpretation to candidates; neither tool accepts, rejects, ranks, legally clears, reserves, or guarantees a purchase.
 5. Call list_name_candidates. Review semantic connection, pronounceability, audience fit, distinctiveness, contradictory evidence, and domain evidence. Use move_name_candidates to progress generated → reviewing → shortlisted → finalist → selected, or reject weak options. Use rank_name_candidates for explicit user-facing priorities. Regenerate from observed failure patterns rather than drifting to arbitrary word combinations.
-6. Visit material collision sources. EUIPO automation is coming soon and search_trademarks currently returns 503 without a provider call, so use the official EUIPO interface plus other relevant registers and check the chosen domain with an accredited registrar. Record jurisdiction, query, classes, source URLs, and checkedAt.
+6. Read trademarkScreening in get_naming_research_context before searching. search_trademarks is an implemented EUIPO API adapter and runs only when that deployment reports live provider access; otherwise it returns a structured 503 and official manual handoff without calling the provider. Use every relevant official register, record jurisdiction, query, classes, result wording, source URLs, and checkedAt, and treat all screening as preliminary rather than legal clearance.
 7. A project can have only one selected candidate. Selecting it also updates the browser-facing chosen brand name.
 
 Scopes & quota: naming keys need naming:read for reads/domain research and naming:write for projects, generations, and board edits; kits:write covers creating kits/brands. Generation spends AI credits per successfully persisted unique name; ordinary API calls use the separate account-wide monthly API quota shared by all keys. Full agent docs: https://identityforge.io/for-agents.`
@@ -1333,7 +1333,7 @@ export function buildMcpServer(): McpServer {
 		{
 			title: "Move or annotate naming candidates",
 			description:
-				"Progress up to 100 candidates through the kanban in one atomic write, and optionally replace their notes and evidence at the same time. Columns run generated, reviewing, shortlisted, finalist, selected, and rejected. This is the tool for recording a decision and why you made it; rank_name_candidates only reorders and leaves status alone. A project can hold exactly one selected candidate, and selecting one also sets the project's chosen brand name, so treat that move as the final call. Pass expectedUpdatedAt from list_name_candidates to reject a write when the row changed underneath you. Requires the naming:write scope.",
+				"Progress up to 100 candidates through the kanban in one atomic write, and optionally replace their notes or merge top-level evidence keys at the same time. Existing evidence from other sources is preserved unless the same key is supplied. Columns run generated, reviewing, shortlisted, finalist, selected, and rejected. This is the tool for recording a decision and why you made it; rank_name_candidates only reorders and leaves status alone. A project can hold exactly one selected candidate, and selecting one also sets the project's chosen brand name, so treat that move as the final call. Pass expectedUpdatedAt from list_name_candidates to reject a write when the row changed underneath you. Requires the naming:write scope.",
 			inputSchema: {
 				projectId: z
 					.string()
@@ -1363,7 +1363,9 @@ export function buildMcpServer(): McpServer {
 							evidence: z
 								.record(z.string(), z.unknown())
 								.optional()
-								.describe("Replaces the attached research evidence."),
+								.describe(
+									"Merges these top-level keys into attached research evidence, preserving unrelated sources. Use trademarkScreening for dated register observations.",
+								),
 							expectedUpdatedAt: z
 								.string()
 								.optional()
@@ -1536,7 +1538,7 @@ export function buildMcpServer(): McpServer {
 		{
 			title: "Search EUIPO trademarks",
 			description:
-				"Coming soon. Until EUIPO production access is verified and explicitly enabled, this returns 503 without calling the provider. Preliminary screening only, not legal clearance. Requires naming:read.",
+				"Run preliminary EUIPO screening through the implemented official API adapter when this deployment reports live provider access. If access is not configured, returns a structured 503 with upstream/implementation/runtime status and an official manual handoff, without calling the provider. This covers EUIPO only, not every relevant jurisdiction, and is not legal clearance. Read get_naming_research_context for the provider matrix. Requires naming:read.",
 			inputSchema: {
 				projectId: z
 					.string()
@@ -1605,6 +1607,12 @@ export function buildMcpServer(): McpServer {
 					.describe(
 						"Default true. Disable only when registrar checks are not needed.",
 					),
+				acquisitionIntent: z
+					.enum(["new_registration", "aftermarket", "either"])
+					.optional()
+					.describe(
+						"Default new_registration. Aftermarket/either also runs a bounded public landing-page probe. Prefer assess_domain_acquisition for this goal-level question.",
+					),
 				market: z
 					.string()
 					.max(120)
@@ -1617,7 +1625,14 @@ export function buildMcpServer(): McpServer {
 				),
 			},
 		},
-		async ({ domains, includeSerp, includeRegistrar, market, language }) => {
+		async ({
+			domains,
+			includeSerp,
+			includeRegistrar,
+			acquisitionIntent,
+			market,
+			language,
+		}) => {
 			try {
 				return textResult(
 					JSON.stringify(
@@ -1625,6 +1640,52 @@ export function buildMcpServer(): McpServer {
 							domains,
 							includeSerp,
 							includeRegistrar,
+							acquisitionIntent,
+							market,
+							language,
+						}),
+						null,
+						2,
+					),
+				)
+			} catch (err) {
+				return errorResult(err)
+			}
+		},
+	)
+
+	server.registerTool(
+		"assess_domain_acquisition",
+		{
+			title: "Assess domain acquisition paths",
+			description:
+				"Assess up to 20 domains for a stated acquisition intent: new registration, an aftermarket listing, or either. New-registration evidence comes only from the registrar result. Aftermarket evidence comes from a bounded, SSRF-protected public landing-page probe and reports literal sale, marketplace, reserved-page, and visible-price signals without validating a seller or guaranteeing purchase. Basic research costs one monthly unit per unique domain, aftermarket evidence adds one, and optional SERP adds one. A successful exact repeat within ten minutes is charged zero units and says so in meta.billing. Requires naming:read.",
+			inputSchema: {
+				domains: z
+					.array(MCP_DOMAIN_INPUT_SCHEMA)
+					.min(1)
+					.max(20)
+					.describe("1-20 bare domains including the TLD."),
+				intent: z
+					.enum(["new_registration", "aftermarket", "either"])
+					.describe("The acquisition path the user actually wants."),
+				includeSerp: z
+					.boolean()
+					.optional()
+					.describe("Default false. Adds market-collision search evidence."),
+				market: z.string().max(120).optional(),
+				language: MCP_DOMAIN_LANGUAGE_SCHEMA.optional(),
+			},
+		},
+		async ({ domains, intent, includeSerp, market, language }) => {
+			try {
+				return textResult(
+					JSON.stringify(
+						await checkDomains({
+							domains,
+							includeSerp,
+							includeRegistrar: intent !== "aftermarket",
+							acquisitionIntent: intent,
 							market,
 							language,
 						}),

@@ -74,6 +74,11 @@ function commandPaths(): string[] {
 		const parent = parents.get(receiver)
 		if (parent) paths.add(`${parent} ${name}`)
 	}
+	for (const match of INDEX.matchAll(
+		/program\s*\.\s*command\(\s*"[a-z][a-z-]*"\s*\)\s*\.alias\(\s*"([a-z][a-z-]*)"\s*\)/g,
+	)) {
+		paths.add(match[1] as string)
+	}
 	return [...paths].sort()
 }
 

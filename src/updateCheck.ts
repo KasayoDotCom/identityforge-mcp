@@ -4,6 +4,14 @@ import { readConfig, updateConfig } from "./config.js"
 const REGISTRY_URL = "https://registry.npmjs.org/identityforge/latest"
 const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000
 
+export interface UpdateStatus {
+	currentVersion: string
+	latestVersion?: string
+	updateAvailable: boolean
+	checkedAt?: string
+	source: "registry" | "cache" | "unavailable"
+}
+
 type ParsedVersion = {
 	major: number
 	minor: number
@@ -12,9 +20,9 @@ type ParsedVersion = {
 }
 
 function parseVersion(value: string): ParsedVersion | undefined {
-	const match = value.trim().match(
-		/^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/,
-	)
+	const match = value
+		.trim()
+		.match(/^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/)
 	if (!match) return undefined
 	return {
 		major: Number(match[1]),
@@ -39,7 +47,11 @@ function compareVersions(left: ParsedVersion, right: ParsedVersion): number {
 				? -1
 				: 1
 	}
-	for (let i = 0; i < Math.max(left.prerelease.length, right.prerelease.length); i++) {
+	for (
+		let i = 0;
+		i < Math.max(left.prerelease.length, right.prerelease.length);
+		i++
+	) {
 		const a = left.prerelease[i]
 		const b = right.prerelease[i]
 		if (a === undefined) return -1
@@ -57,12 +69,19 @@ function compareVersions(left: ParsedVersion, right: ParsedVersion): number {
 export function isVersionGreater(candidate: string, current: string): boolean {
 	const left = parseVersion(candidate)
 	const right = parseVersion(current)
-	return left !== undefined && right !== undefined && compareVersions(left, right) > 0
+	return (
+		left !== undefined &&
+		right !== undefined &&
+		compareVersions(left, right) > 0
+	)
 }
 
 let updateNoticePrinted = false
 
-function printUpdateNotice(currentVersion: string, latestVersion: string): void {
+function printUpdateNotice(
+	currentVersion: string,
+	latestVersion: string,
+): void {
 	if (updateNoticePrinted) return
 	updateNoticePrinted = true
 	process.stderr.write(
@@ -116,12 +135,16 @@ function fetchLatestVersion(): Promise<string | undefined> {
 export async function checkForUpdate(currentVersion: string): Promise<void> {
 	const config = readConfig()
 	const cached = config.updateCheck
-	if (cached?.latestVersion && isVersionGreater(cached.latestVersion, currentVersion)) {
+	if (
+		cached?.latestVersion &&
+		isVersionGreater(cached.latestVersion, currentVersion)
+	) {
 		printUpdateNotice(currentVersion, cached.latestVersion)
 	}
 
 	const checkedAt = cached ? Date.parse(cached.checkedAt) : Number.NaN
-	if (Number.isFinite(checkedAt) && Date.now() - checkedAt < CHECK_INTERVAL_MS) return
+	if (Number.isFinite(checkedAt) && Date.now() - checkedAt < CHECK_INTERVAL_MS)
+		return
 
 	let latestVersion: string | undefined
 	try {
@@ -144,6 +167,43 @@ export async function checkForUpdate(currentVersion: string): Promise<void> {
 		} catch {
 			// An unwritable config must never affect the command being run.
 		}
+	}
+}
+
+/** Perform an explicit registry check for scripts and `identityforge update-check`. */
+export async function getUpdateStatus(
+	currentVersion: string,
+): Promise<UpdateStatus> {
+	const cached = readConfig().updateCheck
+	let latestVersion: string | undefined
+	try {
+		latestVersion = await fetchLatestVersion()
+	} catch {
+		latestVersion = undefined
+	}
+	if (latestVersion) {
+		const checkedAt = new Date().toISOString()
+		try {
+			updateConfig({ updateCheck: { checkedAt, latestVersion } })
+		} catch {
+			// A read-only home still gets the answer; it merely cannot cache it.
+		}
+		return {
+			currentVersion,
+			latestVersion,
+			updateAvailable: isVersionGreater(latestVersion, currentVersion),
+			checkedAt,
+			source: "registry",
+		}
+	}
+	return {
+		currentVersion,
+		latestVersion: cached?.latestVersion,
+		updateAvailable: cached?.latestVersion
+			? isVersionGreater(cached.latestVersion, currentVersion)
+			: false,
+		checkedAt: cached?.checkedAt,
+		source: cached?.latestVersion ? "cache" : "unavailable",
 	}
 }
 
