@@ -72,7 +72,6 @@ import {
 	resolveKits,
 	revokeBrandShare,
 	searchNameEvidence,
-	searchTrademarks,
 	setApiClient,
 	setDeclaredAgentSource,
 	shareBrandProject,
@@ -179,7 +178,7 @@ Brand naming and domain research are the secondary flow. If the user needs a nam
 3. Use generate_names for Identity Forge's built-in operator-owned model, with a specific brief, 1-8 recipe ids, and an idempotencyKey so a retry cannot spend twice. Successful names are persisted automatically and spend the API-key owner's AI credits only after the candidate rows commit. If your current agent or another user-authorized offline process proposes names, call add_name_candidates with stable caller-generated UUIDs. Runtime product code must not call paid external LLM APIs. Use list_name_generations to audit provenance.
 4. Use search_name_evidence for model-authored exact-name, market, meaning, language, negative-association, or official-register discovery queries. It returns bounded self-hosted SearXNG results without classifying them and spends one account-wide monthly unit per query. Use check_domains for separate low-level DNS, RDAP, registrar, and optional domain-SERP evidence. Use assess_domain_acquisition when the question is specifically new registration, aftermarket purchase, or either; it keeps those paths separate and can inspect a public landing page. Basic research costs one unit per unique domain, aftermarket evidence adds one, and SERP adds one. Exact repeats within ten minutes are not charged twice. Attach raw evidence plus your interpretation to candidates; neither tool accepts, rejects, ranks, legally clears, reserves, or guarantees a purchase.
 5. Call list_name_candidates. Review semantic connection, pronounceability, audience fit, distinctiveness, contradictory evidence, and domain evidence. Use move_name_candidates to progress generated → reviewing → shortlisted → finalist → selected, or reject weak options. Use rank_name_candidates for explicit user-facing priorities. Regenerate from observed failure patterns rather than drifting to arbitrary word combinations.
-6. Read trademarkScreening in get_naming_research_context before searching. search_trademarks is an implemented EUIPO API adapter and runs only when that deployment reports live provider access; otherwise it returns a structured 503 and official manual handoff without calling the provider. Use every relevant official register, record jurisdiction, query, classes, result wording, source URLs, and checkedAt, and treat all screening as preliminary rather than legal clearance.
+6. Read trademarkScreening in get_naming_research_context, then search every relevant official register manually. Record jurisdiction, query, classes, result wording, source URLs, and checkedAt, and treat all screening as preliminary rather than legal clearance.
 7. A project can have only one selected candidate. Selecting it also updates the browser-facing chosen brand name.
 
 Scopes & quota: naming keys need naming:read for reads/domain research and naming:write for projects, generations, and board edits; kits:write covers creating kits/brands. Generation spends AI credits per successfully persisted unique name; ordinary API calls use the separate account-wide monthly API quota shared by all keys. Full agent docs: https://identityforge.io/for-agents.`
@@ -1526,56 +1525,6 @@ export function buildMcpServer(): McpServer {
 			try {
 				return textResult(
 					JSON.stringify(await searchNameEvidence({ tasks }), null, 2),
-				)
-			} catch (err) {
-				return errorResult(err)
-			}
-		},
-	)
-
-	server.registerTool(
-		"search_trademarks",
-		{
-			title: "Search EUIPO trademarks",
-			description:
-				"Run preliminary EUIPO screening through the implemented official API adapter when this deployment reports live provider access. If access is not configured, returns a structured 503 with upstream/implementation/runtime status and an official manual handoff, without calling the provider. This covers EUIPO only, not every relevant jurisdiction, and is not legal clearance. Read get_naming_research_context for the provider matrix. Requires naming:read.",
-			inputSchema: {
-				projectId: z
-					.string()
-					.uuid()
-					.describe("Owned naming project id from list_naming_projects."),
-				nameSuggestionId: z
-					.string()
-					.uuid()
-					.describe("Candidate id from list_name_candidates."),
-				query: z
-					.string()
-					.trim()
-					.min(1)
-					.max(120)
-					.describe("Verbal element to search."),
-				niceClasses: z
-					.array(z.string())
-					.max(10)
-					.optional()
-					.describe(
-						"Nice class numbers relevant to the product, e.g. 9 and 42.",
-					),
-			},
-		},
-		async ({ projectId, nameSuggestionId, query, niceClasses }) => {
-			try {
-				return textResult(
-					JSON.stringify(
-						await searchTrademarks({
-							projectId,
-							nameSuggestionId,
-							query,
-							niceClasses,
-						}),
-						null,
-						2,
-					),
 				)
 			} catch (err) {
 				return errorResult(err)

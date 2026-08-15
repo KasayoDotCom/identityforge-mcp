@@ -12,7 +12,6 @@ const CAPABILITY_GROUPS = {
 	],
 	naming: ["create_naming_project", "generate_names", "list_name_candidates"],
 	domains: ["check_domains", "assess_domain_acquisition"],
-	trademarks: ["search_trademarks"],
 } as const
 
 export interface McpDiagnostic {
