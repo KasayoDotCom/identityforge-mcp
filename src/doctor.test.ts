@@ -11,6 +11,5 @@ test("doctor initializes the MCP server and finds every product capability", asy
 		brandDelivery: true,
 		naming: true,
 		domains: true,
-		trademarks: true,
 	})
 })

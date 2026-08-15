@@ -149,7 +149,7 @@ the `install --client cursor` command above to connect the same MCP server.
 
 ## MCP tools
 
-Once connected, your agent gets 64 tools. Browsing free kits needs no key; scopes are noted where they apply.
+Once connected, your agent gets 63 tools. Browsing free kits needs no key; scopes are noted where they apply.
 
 ### Find a design kit
 
@@ -341,7 +341,8 @@ None of these writes anything. Restoring an old state is an `update_theme` call 
 - `search_name_evidence`: run bounded model-authored searches through self-hosted SearXNG and return evidence without verdicts. One account-wide monthly unit per query.
 - `check_domains`: DNS plus distinct RDAP, registrar, and optional self-hosted SERP evidence. Basic research costs one unit per unique domain; SERP adds one. Absent DNS records only mean a domain might be available.
 - `assess_domain_acquisition`: state whether the goal is a new registration, an aftermarket purchase, or either. It reports registrar registration evidence and bounded public landing-page evidence separately, including literal sale, marketplace, reserved-page, and visible-price signals. It never validates the seller or guarantees purchase. Aftermarket evidence adds one unit per unique domain; an exact successful repeat within ten minutes costs zero.
-- `search_trademarks`: the EUIPO official-API adapter runs only when the deployment reports live provider access. Otherwise it returns structured upstream/implementation/runtime status plus an official manual handoff and makes no provider request. The research context lists EUIPO, DPMA, WIPO, and USPTO coverage; screening is never legal clearance.
+
+Trademark screening remains a separate manual step through the official registers for each relevant jurisdiction. Record the query, classes, source URL, result wording, and date. This is preliminary research, not legal clearance.
 
 ### Build a brand and share it with a client
 
@@ -479,8 +480,6 @@ identityforge naming generations --project <uuid>
 identityforge naming research-context --project <uuid>
 identityforge naming search --file research-tasks.json
 identityforge naming acquisition candidate.com --intent either
-# Returns live EUIPO evidence when enabled, otherwise a structured official manual handoff
-identityforge naming trademarks "Candidate name" --project <uuid> --candidate <uuid> --nice-classes 9,42
 identityforge naming move <candidate-uuid> --project <uuid> --status finalist --notes "Strong market fit"
 identityforge naming rank <candidate-uuid>=1 <candidate-uuid>=2 --project <uuid>
 identityforge naming domains candidate.de candidate.com --serp --market "Germany heating retail" --language de-DE

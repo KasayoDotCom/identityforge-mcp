@@ -153,7 +153,7 @@ test("irreversible MCP tools require a structural confirm boolean", async () => 
 	})
 })
 
-test("mockup spend and the EUIPO production gate need no confirmation field", async () => {
+test("mockup spend needs no confirmation field", async () => {
 	await withClient(async (client) => {
 		const { tools } = await client.listTools()
 		const byName = new Map(tools.map((tool) => [tool.name, tool]))
@@ -161,7 +161,6 @@ test("mockup spend and the EUIPO production gate need no confirmation field", as
 			"generate_mockups",
 			"list_mockup_jobs",
 			"get_mockup_job",
-			"search_trademarks",
 		]) {
 			const tool = byName.get(name)
 			assert.ok(tool, name)
@@ -172,13 +171,15 @@ test("mockup spend and the EUIPO production gate need no confirmation field", as
 			)
 		}
 		assert.match(byName.get("generate_mockups")?.description ?? "", /AI credit/)
-		assert.match(
-			byName.get("search_trademarks")?.description ?? "",
-			/implemented official API adapter/i,
-		)
-		assert.match(
-			byName.get("search_trademarks")?.description ?? "",
-			/without calling the provider/,
+	})
+})
+
+test("does not advertise automated trademark screening without provider access", async () => {
+	await withClient(async (client) => {
+		const { tools } = await client.listTools()
+		assert.equal(
+			tools.some((tool) => tool.name === "search_trademarks"),
+			false,
 		)
 	})
 })

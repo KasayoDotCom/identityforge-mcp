@@ -84,7 +84,6 @@ import {
 	resolveKits,
 	revokeBrandShare,
 	searchNameEvidence,
-	searchTrademarks,
 	shareBrandProject,
 	similarFonts,
 	similarKits,
@@ -1949,37 +1948,6 @@ naming
 			fail(err)
 		}
 	})
-
-naming
-	.command("trademarks")
-	.description(
-		"Run the implemented EUIPO API screening when this deployment has enabled provider access. Otherwise returns a structured 503 with the official manual handoff and makes no provider request.",
-	)
-	.argument("<query>", "Verbal element to search.")
-	.requiredOption("--project <uuid>", "Naming project id.")
-	.requiredOption("--candidate <uuid>", "Name suggestion id in that project.")
-	.option("--nice-classes <list>", "Comma-separated Nice classes, 1-45.")
-	.action(
-		async (
-			query: string,
-			opts: { project: string; candidate: string; niceClasses?: string },
-		) => {
-			try {
-				jsonOutput(
-					await searchTrademarks({
-						projectId: opts.project,
-						nameSuggestionId: opts.candidate,
-						query,
-						niceClasses: opts.niceClasses
-							? commaList(opts.niceClasses)
-							: undefined,
-					}),
-				)
-			} catch (err) {
-				fail(err)
-			}
-		},
-	)
 
 naming
 	.command("domains")
